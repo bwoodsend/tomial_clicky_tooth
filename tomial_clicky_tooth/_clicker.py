@@ -8,6 +8,8 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 import vtkplotlib as vpl
 from motmot import geometry, Mesh
 
+from tomial_clicky_tooth._qapp import app
+
 
 class Colors:
     BACKGROUND = (40, 80, 150)

@@ -1,10 +1,10 @@
-import sys
 import os
 from pathlib import Path
 
 import numpy as np
 from PyQt5 import QtWidgets, QtCore
 
+from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth._clicker import ClickerQtWidget
 from tomial_clicky_tooth._table import LandmarkTable
 
@@ -249,8 +249,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
 
 def main(names, path=None, points=None):
     global self
-
-    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
 
     self = ManualLandmarkSelection(path, names, points)
     self.show()

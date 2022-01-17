@@ -1,4 +1,3 @@
-import sys
 from textwrap import wrap
 
 import numpy as np
@@ -11,6 +10,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5 import QtWidgets, QtGui, QtCore
 
+from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _misc
 
 
@@ -229,15 +229,10 @@ class LandmarkTable(QWidget):
 if __name__ == "__main__":
     from pangolin import Palmer
 
-    # Ipython has a tantrum if you try to create a new Qapp without first
-    # deleting or overwriting the first one.
-    app = None
-    app = QApplication(sys.argv)
-
     self = LandmarkTable(Palmer.range())
     self.show()
 
     for i in range(3, 7):
         self[i] = np.random.random(3)
 
-    exx = app.exec_()
+    app.exec_()
