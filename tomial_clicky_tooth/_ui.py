@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 from PyQt5 import QtWidgets, QtCore
 
-from tomial_clicky_tooth.clicker import ClickerQtWidget
-from tomial_clicky_tooth.table import LandmarkTable
+from tomial_clicky_tooth._clicker import ClickerQtWidget
+from tomial_clicky_tooth._table import LandmarkTable
 
 
 class SwitchModelButton(QtWidgets.QPushButton):

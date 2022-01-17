@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pangolin import Palmer
 
-from tomial_clicky_tooth.ui import main
+from tomial_clicky_tooth._ui import main
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
