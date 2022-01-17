@@ -22,7 +22,13 @@ setup(
     ],
     description="A PyQt5 based user interface for manually inspecting and "
     "placing landmarks on dental models.",
-    install_requires=[],
+    install_requires=[
+        "PyQt5",
+        "motmot",
+        "tomial_odometry @ git+ssh://git@github.com/bwoodsend/tomial_odometry.git@982d1d758c24328ed25e180ef046859d6bc52478",
+        "pangolin @ git+ssh://git@github.com/bwoodsend/pangolin.git@5ac604917ef59db3ef020894835249658fea2510",
+        "vtkplotlib >= 1.5.0",
+    ],
     extras_require={
         "test": ['pytest>=3', 'pytest-order', 'coverage', 'pytest-cov']
     },
