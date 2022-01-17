@@ -8,11 +8,6 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 import vtkplotlib as vpl
 from motmot import geometry, Mesh
 
-try:
-    from vtkmodules.vtkRenderingCore import vtkPropPicker
-except ImportError:
-    from vtk import vtkPropPicker
-
 
 class Colors:
     BACKGROUND = (40, 80, 150)
@@ -20,95 +15,12 @@ class Colors:
     HIGHLIGHTED = "red"
 
 
-class ClickEvent(object):
-    mouse_shift_tolerance = 2
-
-    def __init__(self, button, style):
-        self.button = button
-        self.click_location = None
-        style.AddObserver(self.button + "ButtonPressEvent", self.press_cb)
-        style.AddObserver(self.button + "ButtonReleaseEvent", self.release_cb)
-        style.AddObserver("MouseMoveEvent", self.mouse_move_cb)
-
-    def press_cb(self, invoker, name):
-        vpl.interactive.call_super_callback()
-        self.click_location = invoker.GetInteractor().GetEventPosition()
-
-    def clicks_are_equal(self, point_0, point_1):
-        shift_sqr = sum((i - j)**2 for (i, j) in zip(point_0, point_1))
-        return shift_sqr <= self.mouse_shift_tolerance**2
-
-    def on_click(self, picker):
-        print("clicked at", picker.point)
-
-    def release_cb(self, invoker, name):
-        vpl.interactive.call_super_callback()
-        if self.click_location is None:
-            return
-        picker = vpl.interactive.pick_point(invoker)
-        if picker.actor is None:
-            return
-        if self.clicks_are_equal(self.click_location, picker.point_2d):
-            self.on_click(picker)
-
-    def mouse_move_cb(self, invoker, name):
-        if self.click_location:
-            point_2d = invoker.GetInteractor().GetEventPosition()
-            if self.clicks_are_equal(self.click_location, point_2d):
-                return
-            self.click_location = None
-        # Only calling the super event with the mouse button down (which rotates
-        # the model for left click) when we are sure that this click is not
-        # meant to place a marker reduces the slight jolt when you click on with
-        # a sensitive mouse. Move this line to the top of this method to see
-        # what I mean.
-        vpl.interactive.call_super_callback()
-
-
-class MouseInteractorActor(vpl.vtk.vtkInteractorStyleTrackballCamera):
-    # This thing handles the being clicked on.
-    # The actual cursor objects are contained by the parent (ClickerQtWidget)
-
-    def __init__(self, parent=None):
-        self.parent = parent
-
-        # Attach all the click events to their callback functions
-        # The functions know what triggers them based on the str arguments.
-        ClickEvent("Left", self).on_click = self.left_click_cb
-        ClickEvent("Right", self).on_click = self.right_click_cb
-        self.AddObserver("KeyPressEvent", self.key_press_cb)
-
-    def left_click_cb(self, picker):
-        if picker.actor is self.parent.stl_plot.actor:
-            self.parent.spawn_cursor(picker.point)
-
-    def right_click_cb(self, picker):
-        if picker.actor is not None:
-            cursor = self.parent.get_cursor_near_point(np.array(picker.point))
-            if cursor is not None:
-                print("removing cursor", cursor)
-                self.parent.remove_cursor(cursor)
-                self.parent.cursor_changed.emit(cursor, None)
-
-        self.OnRightButtonUp()
-
-    def key_press_cb(self, style, event_name):
-        modifiers = QtCore.Qt.KeyboardModifiers()
-        # modifiers |= QtCore.Qt.ControlModifier
-        key = _vtk_key_to_Qt(self.GetInteractor().GetKeyCode(),
-                             self.GetInteractor().GetKeySym())
-        if key is None:
-            return
-        event = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, key, modifiers)
-        QtWidgets.QApplication.sendEvent(self.parent, event)
-
-
 def _vtk_key_to_Qt(code, symbol):
     if code:
         return ord(code)
     else:
         return getattr(QtCore.Qt, "Key_" + symbol, None) \
-             or getattr(QtCore.Qt, "Key_" + symbol.split("_")[0], None) \
+            or getattr(QtCore.Qt, "Key_" + symbol.split("_")[0], None)
 
 
 class ClickerQtWidget(vpl.QtFigure2):
@@ -129,10 +41,30 @@ class ClickerQtWidget(vpl.QtFigure2):
                        if i not in self.cursors.keys()).__next__
         self.key_gen = key_gen
 
-        self.style = MouseInteractorActor(self)
-        self.style.SetDefaultRenderer(self.renderer)
-        self.iren.SetInteractorStyle(self.style)
+        vpl.interactive.OnClick("Left", self, self.left_click_cb)
+        vpl.interactive.OnClick("Right", self, self.right_click_cb)
+        self.style.AddObserver("KeyPressEvent", self.key_press_cb)
         self._reset_camera = False
+
+    def left_click_cb(self, pick: vpl.interactive.pick):
+        if pick.actor is self.stl_plot.actor:
+            self.spawn_cursor(pick.point)
+
+    def right_click_cb(self, pick: vpl.interactive.pick):
+        if pick.actor is not None:
+            cursor = self.get_cursor_near_point(np.array(pick.point))
+            if cursor is not None:
+                self.remove_cursor(cursor)
+                self.cursor_changed.emit(cursor, None)
+
+    def key_press_cb(self, style, event_name):
+        modifiers = QtCore.Qt.KeyboardModifiers()
+        key = _vtk_key_to_Qt(style.GetInteractor().GetKeyCode(),
+                             style.GetInteractor().GetKeySym())
+        if key is None:
+            return
+        event = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, key, modifiers)
+        QtWidgets.QApplication.sendEvent(self, event)
 
     def open_stl(self, stl_path):
         if stl_path is None:
