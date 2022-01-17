@@ -1,0 +1,44 @@
+---
+name: Test
+
+on:
+  push:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.9, 3.6, 3.7, 3.8]
+        architecture: ['x64']
+        include:
+          - os: macos-10.15
+            python-version: 3.9
+            architecture: 'x64'
+          - os: macos-latest
+            python-version: 3.9
+            architecture: 'x64'
+          - name: Windows
+            os: windows-latest
+            python-version: 3.9
+            architecture: 'x64'
+          - name: Windows 32-bit
+            os: windows-latest
+            python-version: 3.9
+            architecture: 'x86'
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture }}
+
+      - run: pip install wheel
+      - run: pip install -e .[test]
+
+      - run: pytest

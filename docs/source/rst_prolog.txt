@@ -1,0 +1,9 @@
+.. role:: c(code)
+    :language: c
+    :class: highlight
+
+.. role:: py(code)
+    :language: python
+    :class: highlight
+
+.. py:currentmodule:: tomial_clicky_tooth

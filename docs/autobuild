@@ -1,0 +1,1 @@
+sphinx-autobuild --open-browser --watch ../tomial_clicky_tooth ./source ./build --ignore "*~"
