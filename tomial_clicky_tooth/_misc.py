@@ -1,27 +1,17 @@
 """Dumping ground for random bits and bobs."""
 
-import numpy as np
 import numbers
+from functools import wraps
+
+import numpy as np
 
 
-def copy_name_wrapper(wrapper):
-
-    def wrapped(function):
-        wrapped_function = wrapper(function)
-        wrapped_function.__name__ = function.__name__
-        wrapped_function.__qualname__ = function.__qualname__
-        wrapped_function.__doc__ = function.__doc__
-        return wrapped_function
-
-    return wrapped
-
-
-@copy_name_wrapper
 def multiitemsable(singular):
     """Decorates a ``__getitem__()`` or ``__setitem__()`` method so that it
     handles lists or arrays of indices implicitly similarly to indexing a
     numpy array."""
 
+    @wraps(singular)
     def __x_item__(self, index, *value):
         if isinstance(index, numbers.Integral):
             return singular(self, index, *value)
@@ -41,12 +31,12 @@ def multiitemsable(singular):
     return __x_item__
 
 
-@copy_name_wrapper
 def sliceable(singular):
     """Decorates a ``__getitem__()`` or ``__setitem__()`` method so that it
     handles slices implicitly. The ``__len__()`` function must be defined. Output
     is always a list."""
 
+    @wraps(singular)
     def __x_item__(self, index, *value):
         if isinstance(index, slice):
             return [
