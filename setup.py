@@ -30,7 +30,13 @@ setup(
         "vtkplotlib >= 1.5.0",
     ],
     extras_require={
-        "test": ['pytest>=3', 'pytest-order', 'coverage', 'pytest-cov']
+        "test": [
+            "pytest>=3",
+            "pytest-order",
+            "coverage",
+            "pytest-cov",
+            "tomial_tooth_collection_api @ git+ssh://git@github.com/bwoodsend/tomial_tooth_collection_api.git@0bd1fe8b9b82558712b38ce276a3633c7600bad5",
+        ]
     },
     license="BSD license",
     long_description=readme,

@@ -76,6 +76,7 @@ class ClickerQtWidget(vpl.QtFigure2):
         # Read the stl directly from file
         mesh = Mesh(stl_path)
         self.stl_path = stl_path
+        self.mesh = mesh
 
         self.stl_plot = vpl.mesh_plot(mesh, fig=self)
 
