@@ -25,8 +25,7 @@ class SwitchModelButton(QtWidgets.QPushButton):
 
 class ManualLandmarkSelection(QtWidgets.QWidget):
 
-    def __init__(self, stl_path=None, landmark_names=(), points=None,
-                 parent=None):
+    def __init__(self, landmark_names, stl_path=None, points=None, parent=None):
         super().__init__(parent)
 
         self.h_box = QtWidgets.QHBoxLayout()
@@ -248,9 +247,7 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
 
 
 def main(names, path=None, points=None):
-    global self
-
-    self = ManualLandmarkSelection(path, names, points)
+    self = ManualLandmarkSelection(names, path, points)
     self.show()
     app.exec()
 

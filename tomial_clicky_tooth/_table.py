@@ -33,7 +33,7 @@ class LandmarkTable(QWidget):
     COLUMNS = ["Name", "X", "Y", "Z"]
     COLUMN_NUMBERS = {name: i for (i, name) in enumerate(COLUMNS)}
 
-    def __init__(self, names=(), parent=None):
+    def __init__(self, names, parent=None):
         self.names = names
         super().__init__(parent)
 
