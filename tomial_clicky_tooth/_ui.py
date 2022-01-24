@@ -100,12 +100,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         clear_markers_action.triggered.connect(self.table.clear_all)
         edit_menu.addAction(clear_markers_action)
 
-        help_menu = menu_bar.addMenu("&Help")
-
-        show_license_action = QtWidgets.QAction("About", self)
-        show_license_action.triggered.connect(self.show_licence)
-        help_menu.addAction(show_license_action)
-
         menu_bar.adjustSize()
 
         return menu_bar
@@ -153,12 +147,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
 
     def save_csv_name(self):
         return self.clicker.stl_path.stem + ".csv"
-
-    def show_licence(self):
-        self.box = box = QtWidgets.QMessageBox()
-        box.setText(LICENSE)
-        box.setWindowTitle("About")
-        box.show()
 
     def get_points(self):
         return np.array(self.table)
