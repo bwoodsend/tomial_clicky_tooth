@@ -31,7 +31,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.h_box = QtWidgets.QHBoxLayout()
         self.setLayout(self.h_box)
 
-        self.menu_bar = self.setup_menu_bar()
         self.paths = None
 
         self.setWindowTitle("Manual Landmark Selection")
@@ -40,10 +39,7 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.table = LandmarkTable(landmark_names)
         self.h_box.addWidget(self.table)
         # table button actions
-        self.table.buttons["Clear all"].pressed.connect(self.clear_markers)
         self.table.default_save_name = self.save_csv_name
-        self.table.buttons["Delete Marker(s)"].released.connect(
-            self.clear_selected)
 
         ### clicker ###
         self.clicker_qwidget = ClickerQtWidget(stl_path, self, self.key_gen)
@@ -78,8 +74,11 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         # clicker actions to control table
         self.clicker.cursor_changed.connect(self.cursor_changed_by_clicker_cb)
 
+        self.menu_bar = self.setup_menu_bar()
+
         # optionally start with some landmarks already picked
-        self.set_points(points)
+        if points is not None:
+            self.set_points(points)
 
     def show(self):
         super().show()
@@ -98,7 +97,7 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         edit_menu = menu_bar.addMenu("&Edit")
 
         clear_markers_action = QtWidgets.QAction("Clear markers", self)
-        clear_markers_action.triggered.connect(self.clear_markers)
+        clear_markers_action.triggered.connect(self.table.clear_all)
         edit_menu.addAction(clear_markers_action)
 
         help_menu = menu_bar.addMenu("&Help")
@@ -124,35 +123,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
             self.setWindowTitle(path.stem)
             self.clicker.close_stl()
             self.clicker.open_stl(path)
-
-    def clear_markers(self):
-        keys = list(self.clicker.cursors.keys())
-        [self.clicker.remove_cursor_key(i, update=False) for i in keys]
-        self.clicker.update()
-        del self.table[:]
-        self.table.table.selectRow(0)
-
-    def clear_selected(self):
-        keys = self.table.highlighted_rows()
-        for key in keys:
-            cursor = self.clicker.get_cursor(key)
-            if cursor is not None:
-                self.clicker.remove_cursor_key(key, cb=True, update=False)
-        self.table.increment_focus()
-        self.clicker.update()
-
-    #def table_updated_cb(self):
-    #    rows = self.table.highlighted_rows()
-
-    #    #print(rows)
-    #    for index in rows:
-    #        #print(index)
-    #        pos = self.table.get_position(index)
-    #        #print("table pos", self.table.get_position(index))
-    #        #print("table focus", self.table.hasFocus())
-    #        if pos is not None and self.hasFocus():
-    #            self.clicker.place_cursor(pos, index)
-    #    self.clicker.renWin.Render()
 
     def table_selection_changed_cb(self):
         """Highlights the markers on the model that are selected in the table"""
@@ -197,6 +167,7 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         if isinstance(points, (str, os.PathLike)):
             points = excel_io.read_points(points)[1]
         self.clicker.landmarks = np.arange(len(points)), points
+        self.table_selection_changed_cb()
 
     def set_table_points(self, points):
         if isinstance(points, (str, os.PathLike)):
@@ -204,9 +175,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.table[:] = points
 
     def set_points(self, points):
-        if points is None:
-            return self.clear_markers()
-
         if isinstance(points, (str, os.PathLike)):
             points = excel_io.read_points(points)[1]
 

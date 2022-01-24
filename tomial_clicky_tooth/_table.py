@@ -28,6 +28,13 @@ class _QTable(QTableWidget):
             super().keyPressEvent(event)
 
 
+def button(callback):
+    name = callback.__name__.replace("_", " ").strip().title()
+    out = QtWidgets.QPushButton(name)
+    out.released.connect(callback)
+    return out
+
+
 class LandmarkTable(QWidget):
 
     COLUMNS = ["Name", "X", "Y", "Z"]
@@ -71,29 +78,24 @@ class LandmarkTable(QWidget):
         self.increment_focus()
 
     def setup_buttons(self):
-        self.buttons_layout = QtWidgets.QGridLayout()
-        self.box.addLayout(self.buttons_layout)
+        buttons_layout = QtWidgets.QGridLayout()
+        self.box.addLayout(buttons_layout)
 
-        button_names = [
-            "Shift Selected Up",
-            "Delete Marker(s)",
-            "Clear all",
-            "Shift Selected Down",
-            "Save points",
-        ]
+        self.shift_up_button = button(self.shift_selected_up)
+        self.shift_down_button = button(self.shift_selected_down)
+        self.delete_button = button(self.delete_selected)
+        self.clear_all_button = button(self.clear_all)
+        self.save_button = button(self.save)
 
-        callbacks = [lambda: None] * 5
-        callbacks[0] = self.shift_selected_up
-        callbacks[3] = self.shift_selected_down
-        callbacks[4] = self.save
-
-        self.buttons = {}
-        for (i, name) in enumerate(button_names):
-            button = QtWidgets.QPushButton(name, self.table)
-            button.pressed.connect(callbacks[i])
-            self.buttons_layout.addWidget(button, *divmod(i, 3))
-            self.buttons[name] = button
-        self.buttons[button_names[1]].setShortcut(QtCore.Qt.Key_Delete)
+        for (i, _button) in enumerate([
+                self.shift_up_button,
+                self.delete_button,
+                self.save_button,
+                self.shift_down_button,
+                self.clear_all_button,
+        ]):
+            buttons_layout.addWidget(_button, *divmod(i, 3))
+        self.delete_button.setShortcut(QtCore.Qt.Key_Delete)
 
     @property
     def shape(self):
@@ -113,6 +115,14 @@ class LandmarkTable(QWidget):
                                QtWidgets.QTableWidgetItem("\n".join(wrapped)))
 
         self.update_sizes()
+
+    def clear_all(self):
+        del self[:]
+        self.landmarks_changed.emit(np.array(self))
+
+    def delete_selected(self):
+        del self[self.highlighted_rows()]
+        self.landmarks_changed.emit(np.array(self))
 
     def increment_focus(self):
         current_focus = self.highlighted_rows()

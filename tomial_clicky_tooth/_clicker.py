@@ -132,7 +132,9 @@ class ClickerQtWidget(vpl.QtFigure2):
     @landmarks.setter
     def landmarks(self, landmarks):
         self.clear(update=False)
-        [self._spawn_cursor(j, i, False) for (i, j) in zip(*landmarks)]
+        for (i, j) in zip(*landmarks):
+            if np.isfinite(j).all():
+                self._spawn_cursor(j, i, update=False)
         self.update()
 
     def remove_cursor_key(self, key, cb=False, update=True):
