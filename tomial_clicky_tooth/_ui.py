@@ -112,6 +112,9 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         )
 
         path, _ = QtWidgets.QFileDialog.getOpenFileName(self, **options)
+        self._open_model(path)
+
+    def _open_model(self, path):
         if path:
             path = Path(path)
             self.setWindowTitle(path.stem)

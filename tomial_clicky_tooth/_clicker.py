@@ -14,7 +14,7 @@ from tomial_clicky_tooth._qapp import app
 class Colors:
     BACKGROUND = (40, 80, 150)
     MARKER = "black"
-    HIGHLIGHTED = "red"
+    HIGHLIGHTED = (.9, 0, 0)
 
 
 def _vtk_key_to_Qt(code, symbol):
