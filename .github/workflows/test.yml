@@ -11,22 +11,14 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: [3.9, 3.6, 3.7, 3.8]
-        architecture: ['x64']
         include:
           - os: macos-10.15
             python-version: 3.9
-            architecture: 'x64'
           - os: macos-latest
             python-version: 3.9
-            architecture: 'x64'
           - name: Windows
             os: windows-latest
             python-version: 3.9
-            architecture: 'x64'
-          - name: Windows 32-bit
-            os: windows-latest
-            python-version: 3.9
-            architecture: 'x86'
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -36,9 +28,54 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.architecture }}
 
-      - run: pip install wheel
-      - run: pip install -e .[test]
+      - name: Install Qt dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
+            libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-xinerama0 libxcb-xfixes0
 
-      - run: pytest
+      - name: Install OpenGL drivers
+        if: startsWith(matrix.os, 'windows')
+        run: >
+          curl -Ls
+          https://raw.githubusercontent.com/pyvista/gl-ci-helpers/d1b47528134b977456f29ad8ccd70288f4a241e0/appveyor/install_opengl.ps1
+          | powershell
+
+      - name: Install
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          echo '${{ secrets.SSH }}' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval $(ssh-agent)
+          ssh-add ~/.ssh/id_rsa
+          ssh -o StrictHostKeyChecking=no git@github.com ls || echo ''
+          ssh git@github.com || echo ''
+          python -m pip install -U toml pip setuptools wheel
+          pip install -e .[test]
+
+      # In order for PyQt5 and VTK to run without a screen, we need a fake
+      # screen.
+      - name: setup virtual screen
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get install xvfb
+          Xvfb ':42' & disown
+          echo 'DISPLAY=:42' >> $GITHUB_ENV
+
+      - name: Authenticate tomial_tooth_collection_api
+        run: python -m tomial_tooth_collection_api --authenticate
+        env:
+          TOMIAL_TOOTH_COLLECTION_TOKEN: ${{ secrets.TOMIAL_TOOTH_COLLECTION_TOKEN }}
+
+      - name: Test
+        run: pytest
+
+      # Test PyInstaller.
+      - run: pip install pyinstaller
+      - working-directory: tests/PyInstaller_
+        run: pyinstaller frozen-pytest.spec
+      - working-directory: tests/PyInstaller_
+        run: ./dist/frozen-pytest/frozen-pytest ../..
