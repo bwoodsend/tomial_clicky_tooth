@@ -1,1 +1,2 @@
-from tomial_clicky_tooth import _qapp
+from . import _qapp
+from ._ui import ManualLandmarkSelection
