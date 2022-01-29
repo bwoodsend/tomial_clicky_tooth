@@ -62,7 +62,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get install xvfb
-          Xvfb ':42' & disown
+          Xvfb ':42' -screen 0, 1280x720x24 & disown
           echo 'DISPLAY=:42' >> $GITHUB_ENV
 
       - name: Authenticate tomial_tooth_collection_api
