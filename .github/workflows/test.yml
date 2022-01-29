@@ -71,11 +71,17 @@ jobs:
           TOMIAL_TOOTH_COLLECTION_TOKEN: ${{ secrets.TOMIAL_TOOTH_COLLECTION_TOKEN }}
 
       - name: Test
-        run: pytest
+        run: pytest --screenshot-on-fail
 
       # Test PyInstaller.
       - run: pip install pyinstaller
       - working-directory: tests/PyInstaller_
         run: pyinstaller frozen-pytest.spec
       - working-directory: tests/PyInstaller_
-        run: ./dist/frozen-pytest/frozen-pytest ../..
+        run: ./dist/frozen-pytest/frozen-pytest --screenshot-on-fail ../..
+
+      - if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }} ${{ matrix.python-version }}
+          path: .screenshots

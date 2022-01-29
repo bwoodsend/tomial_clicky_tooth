@@ -117,3 +117,6 @@ ENV/
 
 # Needed for .yapfignore and .dockerignore.
 .git
+
+# Screenshots from testing.
+.screenshots

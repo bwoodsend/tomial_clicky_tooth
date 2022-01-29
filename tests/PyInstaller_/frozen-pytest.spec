@@ -11,6 +11,7 @@ datas, hidden = collect_entry_point("pytest11")
 hidden += [
     "tomial_tooth_collection_api",
     "PyQt5.QtTest",
+    "mss",
 ]
 
 a = Analysis(['frozen-pytest.py'],
