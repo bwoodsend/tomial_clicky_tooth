@@ -21,9 +21,12 @@ def test_file_orientation():
     assert self.odom.forwards([1, 0, 0]) > .9
 
     # And that the camera has adjusted itself correctly to match.
-    self.stl_plot.tri_scalars = (self.mesh.units + 1) / 2
+    vpl.scatter([0, 10, 0], radius=3, color="g", fig=self)
+    vpl.scatter([0, -10, 0], radius=3, color="r", fig=self)
+    self.stl_plot.color = "b"
     app.processEvents()
-    assert _principle_color(self).argmax() == 1
+    r, g, b = _principle_color(self)
+    assert r < g < b
 
     self.close()
 
