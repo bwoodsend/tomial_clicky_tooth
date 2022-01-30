@@ -1,5 +1,3 @@
-import os
-import sys
 import itertools
 from pathlib import Path
 
@@ -7,8 +5,6 @@ import numpy as np
 from PyQt5 import QtWidgets, QtCore, QtGui
 import vtkplotlib as vpl
 from motmot import Mesh
-
-from tomial_clicky_tooth._qapp import app
 
 
 class Colors:
@@ -122,8 +118,7 @@ class ClickerQtWidget(vpl.QtFigure2):
     @property
     def landmarks(self):
         keys = np.array(list(self.cursors.keys()), object)
-        return keys, np.array(
-            [self.cursors[i].source.GetFocalPoint() for i in keys])
+        return keys, np.array([self.cursors[i].point for i in keys])
 
     @landmarks.setter
     def landmarks(self, landmarks):
@@ -151,19 +146,6 @@ class ClickerQtWidget(vpl.QtFigure2):
         if update:
             self.update()
 
-    def rename_cursor(self, old, new):
-        #print("rename", repr(old), "->", repr(new))
-
-        if new in self.cursors:
-            self.remove_cursor_key(new, cb=False)
-
-        if old not in self.cursors:
-            return
-
-        cursor = self.cursors.pop(old)
-        cursor.key = new
-        self.cursors[new] = cursor
-
     def _spawn_cursor(self, xyz, key=None, update=True):
         #print("spawn cursor at", np.round(xyz, 3))
 
@@ -183,9 +165,6 @@ class ClickerQtWidget(vpl.QtFigure2):
     def spawn_cursor(self, point, key=None, update=True):
         cursor = self._spawn_cursor(point, key, update)
         self.cursor_changed.emit(None, cursor)
-
-    def get_cursor(self, key):
-        return self.cursors.get(key, None)
 
     def highlight_markers(self, marker_indices):
         marker_indices = set(marker_indices)
