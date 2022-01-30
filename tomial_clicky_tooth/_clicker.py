@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 from PyQt5 import QtWidgets, QtCore, QtGui
 import vtkplotlib as vpl
-from motmot import geometry, Mesh
+from motmot import Mesh
 
 from tomial_clicky_tooth._qapp import app
 
@@ -54,7 +54,7 @@ class ClickerQtWidget(vpl.QtFigure2):
 
     def right_click_cb(self, pick: vpl.interactive.pick):
         if pick.actor is not None:
-            cursor = self.get_cursor_near_point(np.array(pick.point))
+            cursor = self.nearest_cursor(np.array(pick.point))
             if cursor is not None:
                 self.remove_cursor(cursor)
                 self.cursor_changed.emit(cursor, None)
@@ -109,20 +109,15 @@ class ClickerQtWidget(vpl.QtFigure2):
             self -= self.stl_plot
         self.stl_plot = None
 
-    def get_cursor_near_point(self, xyz, max_distance=3):
-        if len(self.cursors) == 0:
-            return
-        keys, positions = self.landmarks
-        displacements = positions - xyz
-        distances = geometry.magnitude(displacements)
-
-        closest_arg = np.nanargmin(distances)
-        closest_distance = distances[closest_arg]
-        #print("closest distance", round(closest_distance, 3), "mm. Threshold is", max_distance)
-        if closest_distance <= max_distance:
-            return self.cursors[keys[closest_arg]]
-        else:
-            return
+    def nearest_cursor(self, xyz, max_distance=3):
+        best = None
+        best_distance = max_distance**2
+        for cursor in self.cursors.values():
+            distance = sum((i - j)**2 for (i, j) in zip(cursor.point, xyz))
+            if distance < max_distance and distance < best_distance:
+                best_distance = distance
+                best = cursor
+        return best
 
     @property
     def landmarks(self):
