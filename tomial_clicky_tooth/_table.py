@@ -208,12 +208,6 @@ class LandmarkTable(QtWidgets.QWidget):
                                             index.column())
             model.select(new_index, model.Select)
 
-
-#        for (i, j) in zip(args, new_args):
-#            if 0 <= j < self.shape[0]:
-#                self.rename_cb(i, j)
-#            else:
-#                self.remove_cb(i)
         self.landmarks_changed.emit(np.array(self))
 
         self._suppress_itemSelectionChanged = False
@@ -228,6 +222,7 @@ class LandmarkTable(QtWidgets.QWidget):
 
     def shift_selected_down(self):
         self.shift_selected(self.highlighted_rows(), 1)
+
 
 if __name__ == "__main__":
     from pangolin import Palmer

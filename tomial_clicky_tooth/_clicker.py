@@ -147,8 +147,6 @@ class ClickerQtWidget(vpl.QtFigure2):
             self.update()
 
     def _spawn_cursor(self, xyz, key=None, update=True):
-        #print("spawn cursor at", np.round(xyz, 3))
-
         key = key or self.key_gen()
         if key in self.cursors:
             self.remove_cursor_key(key)
@@ -175,11 +173,5 @@ class ClickerQtWidget(vpl.QtFigure2):
             else:
                 color = Colors.MARKER
 
-            #print("setting color", color)
             cursor.color = color
         self.update()
-
-    #def keyPressEvent(self, event):
-    #    print(event)
-    #    if self.parent():
-    #        self.parent().keyPressEvent(event)

@@ -65,11 +65,8 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         ### tie them together ###
 
         # table actions to control the clicker
-
         self.table.itemSelectionChanged.connect(self.table_selection_changed_cb)
         self.table.landmarks_changed.connect(self.set_clicker_points)
-        #self.table.rename_cb = self.clicker.rename_cursor
-        #self.table.remove_cb = self.clicker.remove_cursor_key
 
         # clicker actions to control table
         self.clicker.cursor_changed.connect(self.cursor_changed_by_clicker_cb)
@@ -107,7 +104,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
     def open_model(self):
         options = dict(
             caption="Open an .STL file",
-            #directory=str(config.stl_folder),
             filter="3D Model file (*.stl)",
         )
 
@@ -124,7 +120,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
     def table_selection_changed_cb(self):
         """Highlights the markers on the model that are selected in the table"""
         rows = self.table.highlighted_rows()
-        #print("Highlight", rows)
         self.clicker.highlight_markers(rows)
 
     def key_gen(self):
@@ -140,13 +135,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         if new is not None:
             self.table[new.key] = new.point
         self.table.increment_focus()
-
-    #def cursor_changed_by_table_cb(self, old_key, new_key):
-    #    if cursor.key is not None:
-    #        self.table.clear_position(cursor.key)
-
-    #    self.table.increment_focus()
-    #    self.clicker.renWin.Render()
 
     def save_csv_name(self):
         return self.clicker.stl_path.stem + ".csv"
@@ -192,8 +180,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.clicker.update()
 
     def keyPressEvent(self, event):
-        globals()["event"] = event
-        #print(event)
         # No shift/ctrl/alt/etc keys pressed
         if event.modifiers() == QtCore.Qt.NoModifier:
             if event.key() == QtCore.Qt.Key_Left:
