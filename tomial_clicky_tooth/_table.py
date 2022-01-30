@@ -1,20 +1,13 @@
 from textwrap import wrap
 
 import numpy as np
-from PyQt5.QtWidgets import (
-    QApplication,
-    QTableWidget,
-    QTableWidgetItem,
-    QWidget,
-    QFileDialog,
-)
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _misc
 
 
-class _QTable(QTableWidget):
+class _QTable(QtWidgets.QTableWidget):
 
     def keyPressEvent(self, event):
         if event.modifiers() == QtCore.Qt.NoModifier:
@@ -35,7 +28,7 @@ def button(callback):
     return out
 
 
-class LandmarkTable(QWidget):
+class LandmarkTable(QtWidgets.QWidget):
 
     COLUMNS = ["Name", "X", "Y", "Z"]
     COLUMN_NUMBERS = {name: i for (i, name) in enumerate(COLUMNS)}
@@ -108,11 +101,11 @@ class LandmarkTable(QWidget):
 
         for (i, name) in enumerate(names):
             for j in range(len(self.COLUMNS)):
-                self.table.setItem(i, j, QTableWidgetItem(""))
+                self.table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
 
             wrapped = wrap(str(name), 30)
-            self.table.setItem(i, 0,
-                               QtWidgets.QTableWidgetItem("\n".join(wrapped)))
+            cell = QtWidgets.QTableWidgetItem("\n".join(wrapped))
+            self.table.setItem(i, 0, cell)
 
         self.update_sizes()
 
@@ -184,7 +177,7 @@ class LandmarkTable(QWidget):
             filter="Basic Spreadsheet (*.csv)",
         )
 
-        path, _ = QFileDialog.getSaveFileName(self, **options)
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, **options)
         if path:
             excel_io.write_points(path, np.array(self), self.names)
 
