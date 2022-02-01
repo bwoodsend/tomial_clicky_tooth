@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 from PyQt5 import QtTest, QtCore
 from vtkmodules.vtkRenderingCore import vtkCoordinate
@@ -7,6 +8,7 @@ import tomial_tooth_collection_api
 
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth._ui import ManualLandmarkSelection
+from tests import xvfb_size
 
 
 def screen_coordinates(figure, world):
@@ -163,5 +165,55 @@ def test_delete():
     assert self.table[:] == [None] * 10
     assert self.clicker.cursors == {}
     assert len(self.clicker.plots) == 1
+
+    self.close()
+
+
+@pytest.mark.parametrize("long_names", [False, True])
+@pytest.mark.parametrize("show", ["show", "showMaximized", "showFullScreen"])
+def test_table_layout(long_names, show):
+    """Ensure that the table reactively takes as much horizontal space as it
+    needs to avoid needing a horizontal scroll bar, but no more.
+
+    """
+    names = Palmer.range()
+    if long_names:
+        names = [
+            f"The bit on the {i} where the landmark needs to go" for i in names
+        ]
+
+    self = ManualLandmarkSelection(names)
+    self._open_model(tomial_tooth_collection_api.model("1L"))
+    points = remove_close(tips(self.clicker.mesh, self.clicker.odom.occlusal))
+
+    getattr(self, show)()
+    # Xvfb has no concept of maximised/fullscreen mode and Qt can't detect its
+    # screen size so manually set it to use the full screen.
+    if show != "show" and xvfb_size():
+        self.resize(*xvfb_size())
+
+    # If not using maximised/fullscreen mode, make the window tiny.
+    if show == "show":
+        self.resize(600, 400)
+    target_width = self.table.table.sizeHint().width()
+
+    for i in range(3):
+        app.processEvents()
+        if self.table.table.width() == target_width:
+            break
+    assert self.table.table.width() == target_width
+
+    assert target_width < self.table.width() < target_width + 20
+    assert not self.table.table.horizontalScrollBar().isVisible()
+
+    # The table should expand horizontally a bit when landmarks are added to fit
+    # the coordinates.
+    old_size = self.table.size()
+    for point in points[:3]:
+        click(self, point)
+    app.processEvents()
+    assert self.table.width() > old_size.width()
+    assert self.table.height() == old_size.height()
+    assert not self.table.table.horizontalScrollBar().isVisible()
 
     self.close()

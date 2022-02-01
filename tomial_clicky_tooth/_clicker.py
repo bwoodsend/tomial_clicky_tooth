@@ -28,6 +28,10 @@ class ClickerQtWidget(vpl.QtFigure2):
         vpl.scf(None)
 
         self.add_preset_views()
+        # The renderer should eat as much space as it can get.
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                                  QtWidgets.QSizePolicy.MinimumExpanding))
 
         self.stl_plot = None
         if path is not None:

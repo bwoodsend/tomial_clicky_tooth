@@ -23,6 +23,17 @@ class SwitchModelButton(QtWidgets.QPushButton):
         print(self.text(), "released")
 
 
+def show_clicker(show_name):
+    """Wrap QWidget.show*() variants so they can all call clicker.show() in
+    addition to QWidget.show()."""
+
+    def show(self):
+        self.clicker.show()
+        getattr(super(type(self), self), show_name)()
+
+    return show
+
+
 class ManualLandmarkSelection(QtWidgets.QWidget):
 
     def __init__(self, landmark_names, stl_path=None, points=None, parent=None):
@@ -77,9 +88,11 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         if points is not None:
             self.set_points(points)
 
-    def show(self):
-        super().show()
-        self.clicker.show()
+    show = show_clicker("show")
+    showMaximized = show_clicker("showMaximized")
+    showMinimized = show_clicker("showMinimized")
+    showFullScreen = show_clicker("showFullScreen")
+    showNormal = show_clicker("showNormal")
 
     def setup_menu_bar(self):
         menu_bar = QtWidgets.QMenuBar(self)

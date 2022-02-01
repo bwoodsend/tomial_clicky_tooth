@@ -12,6 +12,7 @@ hidden += [
     "tomial_tooth_collection_api",
     "PyQt5.QtTest",
     "mss",
+    "psutil",
 ]
 
 a = Analysis(['frozen-pytest.py'],

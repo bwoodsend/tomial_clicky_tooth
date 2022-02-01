@@ -32,3 +32,9 @@ def pytest_runtest_makereport(item, call):
     with mss.mss() as screen:
         name = re.sub(r"[^\w.\-]+", " ", item.nodeid) + ".png"
         screen.shot(output=str(item.config.rootdir / ".screenshots" / name))
+
+
+def pytest_report_header(config):
+    """Add virtual screen size to pytest's header."""
+    from tests import xvfb_size
+    return ["Xvfb display: {}".format(xvfb_size())]

@@ -20,6 +20,19 @@ class _QTable(QtWidgets.QTableWidget):
         else:
             super().keyPressEvent(event)
 
+    def sizeHint(self) -> QtCore.QSize:
+        """Use exactly the required amount of horizontal space to fit all table
+        cells without resorting to abbreviating or scroll bars."""
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+        width = self.verticalHeader().width() + 2
+        if self.verticalScrollBar().isVisible():
+            width += self.verticalScrollBar().sizeHint().width()
+        for i in range(self.columnCount()):
+            width += self.columnWidth(i)
+
+        return QtCore.QSize(width, super().sizeHint().height())
+
 
 def button(callback):
     name = callback.__name__.replace("_", " ").strip().title()
@@ -30,7 +43,7 @@ def button(callback):
 
 class LandmarkTable(QtWidgets.QWidget):
 
-    COLUMNS = ["Name", "X", "Y", "Z"]
+    COLUMNS = ["Landmark", "X", "Y", "Z"]
     COLUMN_NUMBERS = {name: i for (i, name) in enumerate(COLUMNS)}
 
     def __init__(self, names, parent=None):
@@ -44,10 +57,11 @@ class LandmarkTable(QtWidgets.QWidget):
         self.setLayout(self.box)
         self.box.addWidget(table)
 
-        policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum,
-                                       QtWidgets.QSizePolicy.Minimum)
+        # The table should strictly obey its horizontal size hint but use as
+        # much vertical space as is available.
+        policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed,
+                                       QtWidgets.QSizePolicy.Ignored)
         self.setSizePolicy(policy)
-        self.setFixedWidth(500)
 
         self.font = QtGui.QFont()
         self.font.setPixelSize(16)
@@ -57,12 +71,13 @@ class LandmarkTable(QtWidgets.QWidget):
 
         table.setColumnCount(len(self.COLUMNS))
         table.setHorizontalHeaderLabels(self.COLUMNS)
-        table.setSizeAdjustPolicy(
-            QtWidgets.QAbstractScrollArea.AdjustToContents)
+        table.setSizeAdjustPolicy(table.AdjustToContents)
         table.setSelectionBehavior(table.SelectRows)
+        table.horizontalHeader().setMinimumSectionSize(50)
 
         self.load_table_contents(names)
-        self.table.itemChanged.connect(self.update_sizes)
+        self.table.setWordWrap(True)
+        self.table.itemChanged.connect(self.table.adjustSize)
 
         self._suppress_itemSelectionChanged = False
         self.table.itemSelectionChanged.connect(
@@ -81,13 +96,13 @@ class LandmarkTable(QtWidgets.QWidget):
         self.save_button = button(self.save)
 
         for (i, _button) in enumerate([
-                self.shift_up_button,
                 self.delete_button,
-                self.save_button,
-                self.shift_down_button,
                 self.clear_all_button,
+                self.shift_up_button,
+                self.shift_down_button,
+                self.save_button,
         ]):
-            buttons_layout.addWidget(_button, *divmod(i, 3))
+            buttons_layout.addWidget(_button, *divmod(i, 2))
         self.delete_button.setShortcut(QtCore.Qt.Key_Delete)
 
     @property
@@ -100,14 +115,13 @@ class LandmarkTable(QtWidgets.QWidget):
         self.items = np.empty(self.shape, object)
 
         for (i, name) in enumerate(names):
-            for j in range(len(self.COLUMNS)):
+            for j in range(1, len(self.COLUMNS)):
                 self.table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
 
-            wrapped = wrap(str(name), 30)
-            cell = QtWidgets.QTableWidgetItem("\n".join(wrapped))
+            cell = QtWidgets.QTableWidgetItem("\n".join(wrap(str(name), 40)))
             self.table.setItem(i, 0, cell)
 
-        self.update_sizes()
+        self.table.adjustSize()
 
     def clear_all(self):
         del self[:]
@@ -131,10 +145,6 @@ class LandmarkTable(QtWidgets.QWidget):
 
         if len(current_focus) == 0:
             self.table.selectRow(i)
-
-    def update_sizes(self):
-        self.table.resizeColumnsToContents()
-        self.table.resizeRowsToContents()
 
     def highlighted_rows(self):
         return sorted(set([i.row() for i in self.table.selectedItems()]))
