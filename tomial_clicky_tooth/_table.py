@@ -168,6 +168,7 @@ class LandmarkTable(QtWidgets.QWidget):
             point = None
         else:
             texts = np.round(point, 3).astype(str)
+            point = tuple(point)
         self.points[index] = point
         for (i, ax) in enumerate("XYZ"):
             self.table.item(index, self.COLUMN_NUMBERS[ax]).setText(texts[i])
