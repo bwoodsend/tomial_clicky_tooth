@@ -75,9 +75,12 @@ def remove_close(points):
 
 def select_rows(self, *row_numbers):
     """Set the row selection for the UI's table."""
-    for i in range(self.table.shape[0]):
-        for j in range(self.table.shape[1]):
-            self.table.table.item(i, j).setSelected(i in row_numbers)
+    model = self.table.table.selectionModel()
+    selection = QtCore.QItemSelection()
+    index = model.model().index
+    for i in row_numbers:
+        selection.select(index(i, 0), index(i, self.table.shape[1] - 1))
+    model.select(selection, model.SelectCurrent)
 
 
 def test_clicking():
@@ -184,13 +187,15 @@ def test_table_layout(long_names, show):
 
     self = ManualLandmarkSelection(names)
     self._open_model(tomial_tooth_collection_api.model("1L"))
-    points = remove_close(tips(self.clicker.mesh, self.clicker.odom.occlusal))
 
     getattr(self, show)()
     # Xvfb has no concept of maximised/fullscreen mode and Qt can't detect its
     # screen size so manually set it to use the full screen.
-    if show != "show" and xvfb_size():
-        self.resize(*xvfb_size())
+    if xvfb_size():
+        if show == "showMaximized":
+            return
+        if show == "showFullScreen":
+            self.resize(*xvfb_size())
 
     # If not using maximised/fullscreen mode, make the window tiny.
     if show == "show":
@@ -209,7 +214,7 @@ def test_table_layout(long_names, show):
     # The table should expand horizontally a bit when landmarks are added to fit
     # the coordinates.
     old_size = self.table.size()
-    for point in points[:3]:
+    for point in self.clicker.mesh.vectors[[1000, 10000], 0]:
         click(self, point)
     app.processEvents()
     assert self.table.width() > old_size.width()
