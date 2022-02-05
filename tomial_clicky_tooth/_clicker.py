@@ -129,28 +129,26 @@ class ClickerQtWidget(vpl.QtFigure2):
         self.clear(update=False)
         for (i, j) in zip(*landmarks):
             if np.isfinite(j).all():
-                self._spawn_cursor(j, i, update=False)
+                self._spawn_cursor(j, i)
         self.update()
 
-    def remove_cursor_key(self, key, cb=False, update=True):
-        return self.remove_cursor(self.cursors.pop(key), cb, update)
+    def remove_cursor_key(self, key, cb=False):
+        return self.remove_cursor(self.cursors.pop(key), cb)
 
-    def remove_cursor(self, cursor, cb=False, update=True):
+    def remove_cursor(self, cursor, cb=False):
         self.cursors.pop(cursor.key, None)
         self -= cursor
-        if update:
-            self.update()
         if cb:
             self.cursor_changed.emit(cursor, None)
         return cursor
 
     def clear(self, update=True):
         for key in list(self.cursors):
-            self.remove_cursor_key(key, cb=False, update=False)
+            self.remove_cursor_key(key, cb=False)
         if update:
             self.update()
 
-    def _spawn_cursor(self, xyz, key=None, update=True):
+    def _spawn_cursor(self, xyz, key=None):
         key = key or self.key_gen()
         if key in self.cursors:
             self.remove_cursor_key(key)
@@ -158,14 +156,12 @@ class ClickerQtWidget(vpl.QtFigure2):
         cursor = vpl.scatter(xyz, color=Colors.MARKER, fig=self,
                              use_cursors=True)
         cursor.key = key
-        if update:
-            self.update()
 
         self.cursors[cursor.key] = cursor
         return cursor
 
-    def spawn_cursor(self, point, key=None, update=True):
-        cursor = self._spawn_cursor(point, key, update)
+    def spawn_cursor(self, point, key=None):
+        cursor = self._spawn_cursor(point, key)
         self.cursor_changed.emit(None, cursor)
 
     def highlight_markers(self, marker_indices):
