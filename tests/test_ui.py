@@ -1,14 +1,19 @@
 import pytest
 import numpy as np
 from PyQt5 import QtTest, QtCore
+import pyperclip
 from vtkmodules.vtkRenderingCore import vtkCoordinate
 from motmot import geometry
 from pangolin import Palmer
 import tomial_tooth_collection_api
 
 from tomial_clicky_tooth._qapp import app
+from tomial_clicky_tooth import _csv
 from tomial_clicky_tooth._ui import ManualLandmarkSelection
 from tests import xvfb_size
+from tests.test_csv import INVALID_CSVs
+
+pytestmark = pytest.mark.order(5)
 
 
 def screen_coordinates(figure, world):
@@ -220,5 +225,59 @@ def test_table_layout(long_names, show):
     assert self.table.width() > old_size.width()
     assert self.table.height() == old_size.height()
     assert not self.table.table.horizontalScrollBar().isVisible()
+
+    self.close()
+
+
+def test_paste():
+    """Test pasting points into the landmark table."""
+    self = ManualLandmarkSelection(Palmer.range(0, "LR5"))
+    self.show()
+    app.processEvents()
+
+    # Basic paste one point.
+    pyperclip.copy("123\t456\t789")
+    self.table.paste_button.click()
+    assert self.table[0] == (123, 456, 789)
+    assert self.clicker.cursors[0].point == (123, 456, 789)
+
+    # Populate the table.
+    points = np.c_[np.arange(5) * 4, np.random.random(5), np.random.random(5)]
+    self.set_points(points)
+    self.clicker.reset_camera()
+    self.clicker.update()
+    assert np.all(self.get_points() == points)
+
+    # Test that various invalid CSVs don't write to the table before realising
+    # that they are invalid.
+    for text in INVALID_CSVs:
+        assert _csv.parse_points(text) is None
+        pyperclip.copy(text)
+        self.table.paste_button.click()
+        assert np.all(self.get_points() == points)
+
+    # Ensure that trailing newlines don't cause the next point to be overwritten
+    # with a blank.
+    self.table.table.selectRow(3)
+    pyperclip.copy("0,0,0\n")
+    self.table.paste()
+    assert self.table[3] == (0, 0, 0)
+    assert np.all(self.clicker.cursors[4].point == points[4])
+
+    # Paste overwriting all values, including replacing points with blanks.
+    pyperclip.copy(",,\r\n1, .5, .3\r\n,,\r\n3,.2,.6\r\n,,")
+    self.table.table.selectRow(0)
+    self.table.paste()
+    assert len(self.clicker.cursors) == 2
+    assert self.clicker.cursors[1].point == (1, .5, .3)
+    assert self.clicker.cursors[3].point == (3, .2, .6)
+
+    # Paste starting from the middle of the table so that the last two values in
+    # the clipboard don't fit into the table and should be discarded.
+    self.table.table.selectRow(2)
+    self.table.paste()
+    assert len(self.clicker.cursors) == 2
+    assert self.clicker.cursors[1].point == (1, .5, .3)
+    assert self.clicker.cursors[3].point == (1, .5, .3)
 
     self.close()

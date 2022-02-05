@@ -1,8 +1,11 @@
+import pytest
 import tomial_tooth_collection_api
 import vtkplotlib as vpl
 
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth._clicker import ClickerQtWidget
+
+pytestmark = pytest.mark.order(2)
 
 
 def test_file_orientation():

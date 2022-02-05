@@ -27,6 +27,7 @@ setup(
         "motmot",
         "tomial_odometry @ git+ssh://git@github.com/bwoodsend/tomial_odometry.git@982d1d758c24328ed25e180ef046859d6bc52478",
         "pangolin @ git+ssh://git@github.com/bwoodsend/pangolin.git@5ac604917ef59db3ef020894835249658fea2510",
+        "pyperclip",
         "vtkplotlib >= 1.5.0",
     ],
     extras_require={

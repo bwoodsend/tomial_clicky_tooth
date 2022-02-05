@@ -2,9 +2,10 @@ from textwrap import wrap
 
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
+import pyperclip
 
 from tomial_clicky_tooth._qapp import app
-from tomial_clicky_tooth import _misc
+from tomial_clicky_tooth import _misc, _csv
 
 
 class _QTable(QtWidgets.QTableWidget):
@@ -89,21 +90,27 @@ class LandmarkTable(QtWidgets.QWidget):
         buttons_layout = QtWidgets.QGridLayout()
         self.box.addLayout(buttons_layout)
 
-        self.shift_up_button = button(self.shift_selected_up)
-        self.shift_down_button = button(self.shift_selected_down)
-        self.delete_button = button(self.delete_selected)
+        self.cut_button = button(self.cut)
+        self.copy_button = button(self.copy)
+        self.paste_button = button(self.paste)
+        self.delete_button = button(self.delete)
         self.clear_all_button = button(self.clear_all)
         self.save_button = button(self.save)
 
         for (i, _button) in enumerate([
                 self.delete_button,
                 self.clear_all_button,
-                self.shift_up_button,
-                self.shift_down_button,
+                self.cut_button,
+                self.copy_button,
+                self.paste_button,
                 self.save_button,
         ]):
             buttons_layout.addWidget(_button, *divmod(i, 2))
+
         self.delete_button.setShortcut(QtCore.Qt.Key_Delete)
+        self.cut_button.setShortcut(QtGui.QKeySequence.StandardKey.Cut)
+        self.copy_button.setShortcut(QtGui.QKeySequence.StandardKey.Copy)
+        self.paste_button.setShortcut(QtGui.QKeySequence.StandardKey.Paste)
 
     @property
     def shape(self):
@@ -127,7 +134,7 @@ class LandmarkTable(QtWidgets.QWidget):
         del self[:]
         self.landmarks_changed.emit(np.array(self))
 
-    def delete_selected(self):
+    def delete(self):
         del self[self.highlighted_rows()]
         self.landmarks_changed.emit(np.array(self))
 
@@ -195,44 +202,30 @@ class LandmarkTable(QtWidgets.QWidget):
     def default_save_name(self):
         return ""
 
-    def shift_selected(self, args, places=1):
-        self._suppress_itemSelectionChanged = True
-
-        args = np.asarray(args)[::-np.sign(places)]
-        vals = [self[i] for i in args]
-        for i in args:
-            del self[i]
-
-        new_args = args + places
-        for (xyz, i) in zip(vals, new_args):
-            if 0 <= i < self.shape[0]:
-                self[i] = xyz
-
-        model = self.table.selectionModel()
-        indices = model.selectedIndexes()
-
-        for index in indices:
-            model.select(index, model.Deselect)
-
-        for index in indices:
-            new_index = model.model().index(index.row() + places,
-                                            index.column())
-            model.select(new_index, model.Select)
-
-        self.landmarks_changed.emit(np.array(self))
-
-        self._suppress_itemSelectionChanged = False
-        self.table.itemSelectionChanged.emit()
-
     def _filter_itemSelectionChanged(self):
         if not self._suppress_itemSelectionChanged:
             self.itemSelectionChanged.emit()
 
-    def shift_selected_up(self):
-        self.shift_selected(self.highlighted_rows(), -1)
+    def cut(self):
+        self.copy()
+        self.delete()
 
-    def shift_selected_down(self):
-        self.shift_selected(self.highlighted_rows(), 1)
+    def copy(self):
+        points = self[self.highlighted_rows()]
+        csv = "\n".join("\t".join(map(str, row or [''] * 3)) for row in points)
+        pyperclip.copy(csv)
+
+    def paste(self):
+        text = pyperclip.paste()
+        if not text:
+            return
+        points = _csv.parse_points(text)
+        if points is None:
+            return
+        start = self.highlighted_rows()[0]
+        for (i, point) in zip(range(start, len(self)), points):
+            self[i] = point
+        self.landmarks_changed.emit(np.array(self))
 
 
 if __name__ == "__main__":
