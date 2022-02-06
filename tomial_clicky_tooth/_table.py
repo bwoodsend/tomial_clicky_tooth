@@ -1,4 +1,5 @@
 from textwrap import wrap
+import platform
 
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
@@ -9,6 +10,10 @@ from tomial_clicky_tooth import _misc, _csv
 
 
 class _QTable(QtWidgets.QTableWidget):
+
+    # On macOS, the scroll bar hovers over the table instead of slotting in
+    # next to it.
+    ignore_scroll_bar_width = platform.system() == "Darwin"
 
     def keyPressEvent(self, event):
         if event.modifiers() == QtCore.Qt.NoModifier:
@@ -27,8 +32,9 @@ class _QTable(QtWidgets.QTableWidget):
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         width = self.verticalHeader().width() + 2
-        if self.verticalScrollBar().isVisible():
-            width += self.verticalScrollBar().sizeHint().width()
+        if not self.ignore_scroll_bar_width:  # pragma: no cover
+            if self.verticalScrollBar().isVisible():
+                width += self.verticalScrollBar().sizeHint().width()
         for i in range(self.columnCount()):
             width += self.columnWidth(i)
 

@@ -213,14 +213,14 @@ def test_table_layout(long_names, show):
             break
     assert self.table.table.width() == target_width
 
-    assert target_width < self.table.width() < target_width + 20
     assert not self.table.table.horizontalScrollBar().isVisible()
+    assert target_width < self.table.width() < target_width + 50
 
     # The table should expand horizontally a bit when landmarks are added to fit
     # the coordinates.
     old_size = self.table.size()
-    for point in self.clicker.mesh.vectors[[1000, 10000], 0]:
-        click(self, point)
+    for point in self.clicker.mesh.vectors[[1000, 20000], 0]:
+        self.clicker.spawn_cursor(point)
     app.processEvents()
     assert self.table.width() > old_size.width()
     assert self.table.height() == old_size.height()
