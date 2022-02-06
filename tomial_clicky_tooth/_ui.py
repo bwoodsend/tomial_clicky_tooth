@@ -204,8 +204,26 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.clicker.closeEvent(event)
 
 
+class Interact(QtCore.QThread):
+
+    def __init__(self, namespace):
+        self.namespace = namespace
+        super().__init__()
+
+    def run(self):
+        import code
+        import readline
+        import rlcompleter
+
+        readline.set_completer(rlcompleter.Completer(self.namespace).complete)
+        readline.parse_and_bind("tab: complete")
+        code.InteractiveConsole(self.namespace).interact()
+
+
 def main(names, path=None, points=None):
     self = ManualLandmarkSelection(names, path, points)
+    t = Interact({**locals(), **globals()})
+    t.start()
     self.show()
     app.exec()
 
