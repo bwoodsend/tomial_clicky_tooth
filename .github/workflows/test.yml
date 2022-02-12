@@ -65,6 +65,20 @@ jobs:
           Xvfb ':42' -screen 0, 1280x720x24 & disown
           echo 'DISPLAY=:42' >> $GITHUB_ENV
 
+      - shell: python
+        run: |
+            from PyQt5.QtGui import QCursor
+            from PyQt5.QtWidgets import QApplication
+
+            app = QApplication([])
+            pos = QCursor.pos()
+            for screen in QApplication.screens():
+                rect = screen.geometry()
+                if rect.contains(pos):
+                    print(screen.devicePixelRatio())
+            # Should never happen, but try to find a good fallback.
+            print(QApplication.instance().devicePixelRatio())
+
       - name: Authenticate tomial_tooth_collection_api
         run: python -m tomial_tooth_collection_api --authenticate
         env:
