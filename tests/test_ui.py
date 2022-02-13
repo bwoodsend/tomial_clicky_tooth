@@ -281,3 +281,27 @@ def test_paste():
     assert self.clicker.cursors[3].point == (1, .5, .3)
 
     self.close()
+
+
+def test_copy():
+    """Test the copy and cut buttons."""
+    pyperclip.copy("")
+
+    points = np.c_[np.arange(5) * 5, np.zeros(5), np.ones(5)]
+    self = ManualLandmarkSelection(Palmer.range(0, "LR5"), points=points)
+    self.show()
+    app.processEvents()
+
+    self.table.copy_button.click()
+    assert pyperclip.paste() == "0.0\t0.0\t1.0"
+
+    select_rows(self, 1, 2, 4)
+    self.table.copy()
+    assert pyperclip.paste() == "5.0\t0.0\t1.0\n10.0\t0.0\t1.0\n20.0\t0.0\t1.0"
+
+    select_rows(self, 0, 2)
+    self.table.cut_button.click()
+    assert pyperclip.paste() == "0.0\t0.0\t1.0\n10.0\t0.0\t1.0"
+    assert sorted(self.clicker.cursors) == [1, 3, 4]
+
+    self.close()
