@@ -112,10 +112,9 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         return menu_bar
 
     def open_model(self):
-        options = dict(
-            caption="Open an .STL file",
-            filter="3D Model file (*.stl)",
-        )
+        filter = " ".join("*" + i for i in STL_SUFFIXES)
+        options = dict(caption="Open an .STL file",
+                       filter=f"3D Model file ({filter})")
 
         path, _ = QtWidgets.QFileDialog.getOpenFileName(self, **options)
         self._open_model(path)
