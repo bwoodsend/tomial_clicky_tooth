@@ -8,6 +8,10 @@ from PyQt5.QtWidgets import QFileDialog
 
 from tomial_clicky_tooth._qapp import app
 
+# Pin the font size for testing so that macOS CI with its tiny screens and huge
+# default font size doesn't break all the layout tests.
+app.setStyleSheet("QWidget: {font-size: 11pt}")
+
 
 def xvfb_size():
     """Get the screen size of an Xvfb virtual display server."""
