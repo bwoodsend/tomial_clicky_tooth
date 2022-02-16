@@ -33,6 +33,7 @@ class ClickerQtWidget(vpl.QtFigure2):
                                   QtWidgets.QSizePolicy.MinimumExpanding))
 
         self.stl_plot = None
+        self.stl_path = None
         if path is not None:
             self.open_stl(path)
 
@@ -74,7 +75,7 @@ class ClickerQtWidget(vpl.QtFigure2):
 
         # Read the stl directly from file
         mesh = Mesh(stl_path)
-        self.stl_path = stl_path
+        self.stl_path = Path(stl_path)
         self.mesh = mesh
 
         self.stl_plot = vpl.mesh_plot(mesh, fig=self)

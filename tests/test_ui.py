@@ -1,3 +1,9 @@
+import tempfile
+import time
+from pathlib import Path
+import shutil
+import os
+
 import pytest
 import numpy as np
 from PyQt5 import QtTest, QtCore
@@ -10,8 +16,8 @@ import tomial_tooth_collection_api
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv
 from tomial_clicky_tooth._ui import ManualLandmarkSelection
-from tests import xvfb_size
-from tests.test_csv import INVALID_CSVs
+from tests import xvfb_size, select_file
+from tests.test_csv import INVALID_CSVs, assert_text_equivalent
 
 pytestmark = pytest.mark.order(5)
 
@@ -303,5 +309,30 @@ def test_copy():
     self.table.cut_button.click()
     assert pyperclip.paste() == "0.0\t0.0\t1.0\n10.0\t0.0\t1.0"
     assert sorted(self.clicker.cursors) == [1, 3, 4]
+
+    self.close()
+
+
+def test_save():
+    points = np.arange(6).reshape((2, 3))
+    self = ManualLandmarkSelection(["foo", "bar"], points=points)
+    self.show()
+    app.processEvents()
+
+    def _test_write(name):
+        csv_path = os.path.join(root, name)
+        with select_file(csv_path):
+            self.table.save()
+        with open(csv_path) as f:
+            assert_text_equivalent(f.read(),
+                                   "Landmarks,X,Y,Z\nfoo,0,1,2\nbar,3,4,5\n")
+
+    with tempfile.TemporaryDirectory() as root:
+        assert self.table.default_save_name() == ""
+        _test_write("foo.csv")
+        with select_file(tomial_tooth_collection_api.model("1L")):
+            self.open_model()
+        assert self.table.default_save_name() == "1L.csv"
+        _test_write("1L.csv")
 
     self.close()

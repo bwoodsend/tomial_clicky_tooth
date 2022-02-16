@@ -1,10 +1,12 @@
 import os
+import re
 from pathlib import Path
 
 import numpy as np
 from PyQt5 import QtWidgets, QtCore
 
 from tomial_clicky_tooth._qapp import app
+from tomial_clicky_tooth import _csv
 from tomial_clicky_tooth._clicker import ClickerQtWidget
 from tomial_clicky_tooth._table import LandmarkTable
 
@@ -112,7 +114,7 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         return menu_bar
 
     def open_model(self):
-        filter = " ".join("*" + i for i in STL_SUFFIXES)
+        filter = " ".join("*" + i for i in SUFFIXES)
         options = dict(caption="Open an .STL file",
                        filter=f"3D Model file ({filter})")
 
@@ -146,7 +148,9 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.table.increment_focus()
 
     def save_csv_name(self):
-        return self.clicker.stl_path.stem + ".csv"
+        if self.clicker.stl_path is not None:
+            return SUFFIX_RE.match(self.clicker.stl_path.name)[1] + ".csv"
+        return ""
 
     def get_points(self):
         return np.array(self.table)
@@ -198,6 +202,10 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
 
     def closeEvent(self, event):
         self.clicker.closeEvent(event)
+
+
+SUFFIXES = [".stl", ".stl.gz", ".stl.bz2", ".stl.xz"]
+SUFFIX_RE = re.compile("(.*)(" + "|".join(map(re.escape, SUFFIXES)) + ")$")
 
 
 class Interact(QtCore.QThread):

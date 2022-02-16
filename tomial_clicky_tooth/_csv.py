@@ -1,5 +1,6 @@
 import io
 import csv
+import math
 
 
 def parse_points(text):
@@ -32,3 +33,23 @@ def parse_points(text):
             return
 
     return points
+
+
+def writes(points, *, names=None):
+    """Serialise landmarks and their names to a landmarks CSV file."""
+    if names is None:
+        names = [""] * len(points)
+
+    file = io.StringIO()
+    writer = csv.writer(file)
+    writer.writerow(("Landmarks", "X", "Y", "Z"))
+    for (name, point) in zip(names, points):
+        if point is None:
+            point = ("", "", "")
+        elif any(map(math.isnan, point)):
+            point = ("", "", "")
+        else:
+            point = (str(i) for i in point)
+        writer.writerow((name, *point))
+
+    return file.getvalue()

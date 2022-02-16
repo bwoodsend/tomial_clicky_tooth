@@ -202,8 +202,12 @@ class LandmarkTable(QtWidgets.QWidget):
         )
 
         path, _ = QtWidgets.QFileDialog.getSaveFileName(self, **options)
+        self._save(path)
+
+    def _save(self, path):
         if path:
-            excel_io.write_points(path, np.array(self), self.names)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(_csv.writes(np.array(self), names=self.names))
 
     def default_save_name(self):
         return ""
