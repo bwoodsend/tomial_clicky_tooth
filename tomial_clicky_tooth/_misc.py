@@ -10,7 +10,6 @@ def multiitemsable(singular):
     """Decorates a ``__getitem__()`` or ``__setitem__()`` method so that it
     handles lists or arrays of indices implicitly similarly to indexing a
     numpy array."""
-
     @wraps(singular)
     def __x_item__(self, index, *value):
         if isinstance(index, numbers.Integral):
@@ -35,7 +34,6 @@ def sliceable(singular):
     """Decorates a ``__getitem__()`` or ``__setitem__()`` method so that it
     handles slices implicitly. The ``__len__()`` function must be defined. Output
     is always a list."""
-
     @wraps(singular)
     def __x_item__(self, index, *value):
         if isinstance(index, slice):

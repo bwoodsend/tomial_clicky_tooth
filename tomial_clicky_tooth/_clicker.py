@@ -22,7 +22,6 @@ def _vtk_key_to_Qt(code, symbol):
 
 
 class ClickerQtWidget(vpl.QtFigure2):
-
     def __init__(self, path=None, parent=None, key_gen=None):
         super().__init__(parent=parent)
         vpl.scf(None)

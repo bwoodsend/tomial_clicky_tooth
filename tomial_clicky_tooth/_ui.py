@@ -10,7 +10,6 @@ from tomial_clicky_tooth._table import LandmarkTable
 
 
 class SwitchModelButton(QtWidgets.QPushButton):
-
     def __init__(self, direction):
         super().__init__(direction)
         self.released.connect(self._callback)
@@ -26,7 +25,6 @@ class SwitchModelButton(QtWidgets.QPushButton):
 def show_clicker(show_name):
     """Wrap QWidget.show*() variants so they can all call clicker.show() in
     addition to QWidget.show()."""
-
     def show(self):
         self.clicker.show()
         getattr(super(type(self), self), show_name)()
@@ -35,7 +33,6 @@ def show_clicker(show_name):
 
 
 class ManualLandmarkSelection(QtWidgets.QWidget):
-
     def __init__(self, landmark_names, stl_path=None, points=None, parent=None):
         super().__init__(parent)
 
@@ -205,7 +202,6 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
 
 
 class Interact(QtCore.QThread):
-
     def __init__(self, namespace):
         self.namespace = namespace
         super().__init__()
