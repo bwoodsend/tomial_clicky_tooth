@@ -92,8 +92,7 @@ class ClickerQtWidget(vpl.QtFigure2):
             self.view_buttons.init_default()
             self.view_buttons.rotate(
                 np.array([self.odom.right, self.odom.forwards, self.odom.up]))
-            vpl.view(self.odom.center_of_mass,
-                     camera_direction=-self.odom.occlusal,
+            vpl.view(camera_position=self.odom.occlusal,
                      up_view=self.odom.forwards, fig=self)
 
         except () as ex:

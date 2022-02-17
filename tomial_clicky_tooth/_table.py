@@ -17,9 +17,7 @@ class _QTable(QtWidgets.QTableWidget):
 
     def keyPressEvent(self, event):
         if event.modifiers() == QtCore.Qt.NoModifier:
-            if event.key() == QtCore.Qt.Key_Left:
-                event.ignore()
-            elif event.key() == QtCore.Qt.Key_Right:
+            if event.key() in (QtCore.Qt.Key_Left, QtCore.Qt.Key_Right):
                 event.ignore()
             else:
                 super().keyPressEvent(event)

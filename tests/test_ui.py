@@ -1,16 +1,17 @@
 import tempfile
-import time
 from pathlib import Path
 import shutil
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 import numpy as np
-from PyQt5 import QtTest, QtCore
+from PyQt5 import QtTest, QtCore, QtGui
 import pyperclip
 from vtkmodules.vtkRenderingCore import vtkCoordinate
 from motmot import geometry
 from pangolin import Palmer
+import vtkplotlib as vpl
 import tomial_tooth_collection_api
 
 from tomial_clicky_tooth._qapp import app
@@ -334,5 +335,94 @@ def test_save():
             self.open_model()
         assert self.table.default_save_name() == "1L.csv"
         _test_write("1L.csv")
+
+    self.close()
+
+
+def key_press(widget, key, modifier=QtCore.Qt.NoModifier):
+    """Send keyboard events."""
+    event = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, key, modifier)
+    app.sendEvent(widget, event)
+
+
+def test_model_switching():
+    """Test iterating through a directory of models."""
+    from PyQt5.QtCore import Qt
+
+    # Put several models and a points file in a single directory.
+    with tempfile.TemporaryDirectory() as root:
+        root = Path(root)
+        files = [
+            Path(shutil.copy(tomial_tooth_collection_api.model(name), root))
+            for name in ["1L", "1U", "2L", "2U"]
+        ]
+
+        self = ManualLandmarkSelection(Palmer.range(), stl_path=files[0])
+        self.show()
+        app.processEvents()
+
+        assert self.clicker.stl_path == files[0]
+        self.buttons[1].click()
+        assert self.clicker.stl_path != files[0]
+        assert self.clicker.stl_path in files
+        self.buttons[0].click()
+        assert self.clicker.stl_path == files[0]
+
+        key_press(self, Qt.Key_Right)
+        assert self.clicker.stl_path != files[0]
+        key_press(self, Qt.Key_Left)
+        assert self.clicker.stl_path == files[0]
+
+        key_press(self, Qt.Key_Left, Qt.ShiftModifier)
+        assert self.clicker.stl_path == files[0]
+        key_press(self.table.table, Qt.Key_Up)
+        assert self.clicker.stl_path == files[0]
+        key_press(self.table.table, Qt.Key_Left, Qt.ShiftModifier)
+        assert self.clicker.stl_path == files[0]
+
+        # It shouldn't matter which portion of the UI currently has focus.
+        key_press(self.clicker, Qt.Key_Right)
+        assert self.clicker.stl_path != files[0]
+        key_press(self.clicker.vtkWidget, Qt.Key_Left)
+        assert self.clicker.stl_path == files[0]
+        key_press(self.table, Qt.Key_Right)
+        assert self.clicker.stl_path != files[0]
+        key_press(self.table.table, Qt.Key_Left)
+        assert self.clicker.stl_path == files[0]
+
+        # Check the orientation is adjusting to each model.
+        up = self.clicker.odom.up
+        forwards = self.clicker.odom.forwards
+        while not self.clicker.stl_path.name.startswith("1U"):
+            self.buttons[0].click()
+        view = vpl.view(fig=self.clicker)
+        camera_direction = geometry.UnitVector(
+            np.array(view["focal_point"]) - view["camera_position"])
+        assert camera_direction(up) > .9
+        assert forwards(view["up_view"]) > .9
+
+        # With a landmarks file present, it should be picked up.
+        shutil.copy(Path(__file__).with_name("1L.csv"), root)
+        while not self.clicker.stl_path.name.startswith("1L"):
+            self.switch_model(">")
+        assert len(self.clicker.cursors) == 14
+        self.switch_model(">")
+        assert len(self.clicker.cursors) == 0
+
+        # Without appropriate thread control, the UI will crash if the user
+        # holds either left or right keys for around >30 seconds.
+        with ThreadPoolExecutor() as pool:
+            clicks = [pool.submit(self.buttons[0].click) for i in range(200)]
+            [i.result() for i in clicks]
+        app.processEvents()
+
+    # Verify that nothing happens if the STL is deleted.
+    assert not self.clicker.stl_path.exists()
+    old_points = np.arange(12).reshape((4, 3))
+    self.set_points(old_points)
+    old_stl_plot = self.clicker.stl_plot
+    self.buttons[0].click()
+    assert self.clicker.stl_plot is old_stl_plot
+    assert np.array_equal(self.get_points()[:4], old_points)
 
     self.close()

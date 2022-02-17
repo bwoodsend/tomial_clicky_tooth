@@ -1,5 +1,6 @@
 import os
 import re
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -42,6 +43,7 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.setLayout(self.h_box)
 
         self.paths = None
+        self._thread_lock = threading.Lock()
 
         self.setWindowTitle("Manual Landmark Selection")
 
@@ -167,31 +169,40 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.table[:] = points
 
     def switch_model(self, direction):
-        if getattr(self.clicker, "stl_path", None) is None:
+        # This function needs a lock to be made thread safe but shouldn't
+        # allow events to queue up if the user holds down one of the arrow
+        # keys.
+        if self._thread_lock.locked():
             return
-        if self.paths is None:
-            paths = list(self.clicker.stl_path.parent.glob("*.stl"))
-        else:
-            paths = self.paths
-        try:
-            index = paths.index(self.clicker.stl_path)
-        except ValueError:
-            return
-        path = paths[(index + {"<": -1, ">": 1}[direction]) % len(paths)]
-        self.clicker.open_stl(path)
-        self.clear_markers()
-        csv_path = path.with_suffix(".csv")
-        if csv_path.exists():
-            self.set_points(csv_path)
-        self.clicker.update()
+        with self._thread_lock:
+            if getattr(self.clicker, "stl_path", None) is None:
+                return
+            paths = [
+                i for i in self.clicker.stl_path.parent.glob("*")
+                if SUFFIX_RE.match(i.name)
+            ]
+            try:
+                index = paths.index(self.clicker.stl_path)
+            except ValueError:
+                return
+            path = paths[(index + {"<": -1, ">": 1}[direction]) % len(paths)]
+            self.clicker.open_stl(path)
+            csv_path = path.with_name(SUFFIX_RE.sub(r"\1.csv", path.name))
+            if csv_path.exists():
+                self.set_points(csv_path)
+            else:
+                self.table.clear_all()
+            self.clicker.update()
 
     def keyPressEvent(self, event):
         # No shift/ctrl/alt/etc keys pressed
         if event.modifiers() == QtCore.Qt.NoModifier:
             if event.key() == QtCore.Qt.Key_Left:
                 self.switch_model("<")
+                event.accept()
             elif event.key() == QtCore.Qt.Key_Right:
                 self.switch_model(">")
+                event.accept()
 
     def closeEvent(self, event):
         self.clicker.closeEvent(event)
