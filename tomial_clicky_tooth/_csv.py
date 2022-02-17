@@ -1,5 +1,6 @@
 import io
 import csv
+from pathlib import Path
 import math
 
 
@@ -31,6 +32,26 @@ def parse_points(text):
                 return
         else:
             return
+
+    return points
+
+
+def read(path):
+    """Read a landmarks CSV file."""
+    text = Path(path).read_text(encoding="utf-8")
+    reader = csv.reader(io.StringIO(text))
+
+    points = []
+    for (i, (name, *point)) in enumerate(reader):
+        if i == 0 and all(i.isalpha() for i in point):
+            continue
+        try:
+            point = tuple(map(float, point))
+            if len(point) != 3:
+                point = None
+        except ValueError:
+            point = None
+        points.append(point)
 
     return points
 

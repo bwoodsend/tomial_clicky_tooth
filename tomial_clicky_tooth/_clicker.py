@@ -128,7 +128,7 @@ class ClickerQtWidget(vpl.QtFigure2):
     def landmarks(self, landmarks):
         self.clear(update=False)
         for (i, j) in zip(*landmarks):
-            if np.isfinite(j).all():
+            if j is not None and np.isfinite(j).all():
                 self._spawn_cursor(j, i)
         self.update()
 

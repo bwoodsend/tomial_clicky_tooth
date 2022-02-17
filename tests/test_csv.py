@@ -1,3 +1,4 @@
+from pathlib import Path
 import re
 
 import numpy as np
@@ -25,6 +26,22 @@ def test_csv_parse():
 
     for csv in INVALID_CSVs:
         assert parse_points(csv) is None
+
+
+def test_read():
+    """Test reading the points.csv mock landmarks file."""
+    path = Path(__file__).with_name("points.csv")
+    points = read(path)
+    assert points == [
+        (1, 2, 3),
+        None,
+        (1000, 200, .03),
+        None,
+        None,
+        None,
+        None,
+        (3, 2, 1),
+    ]
 
 
 def test_writes():

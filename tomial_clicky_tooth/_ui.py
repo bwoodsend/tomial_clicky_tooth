@@ -156,22 +156,15 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         return np.array(self.table)
 
     def set_clicker_points(self, points):
-        if isinstance(points, (str, os.PathLike)):
-            points = excel_io.read_points(points)[1]
         self.clicker.landmarks = np.arange(len(points)), points
         self.table_selection_changed_cb()
 
-    def set_table_points(self, points):
-        if isinstance(points, (str, os.PathLike)):
-            points = excel_io.read_points(points)[1]
-        self.table[:] = points
-
     def set_points(self, points):
         if isinstance(points, (str, os.PathLike)):
-            points = excel_io.read_points(points)[1]
+            points = _csv.read(points)
 
         self.set_clicker_points(points)
-        self.set_table_points(points)
+        self.table[:] = points
 
     def switch_model(self, direction):
         if getattr(self.clicker, "stl_path", None) is None:
