@@ -4,7 +4,7 @@ import re
 import numpy as np
 import pytest
 
-from tomial_clicky_tooth._csv import parse_points, read, writes
+from tomial_clicky_tooth._csv_io import parse_points, read, writes
 
 pytestmark = pytest.mark.order(1)
 
@@ -45,7 +45,7 @@ def test_read():
 
 
 def test_writes():
-    """Test tomial_clicky_tooth._csv.writes() on both NumPy arrays and plain
+    """Test tomial_clicky_tooth._csv_io.writes() on both NumPy arrays and plain
     lists of tuples."""
     points = [None, (.1, .2, .3)]
     target = "Landmarks,X,Y,Z\n,,,\n,0.1,0.2,0.3\n"

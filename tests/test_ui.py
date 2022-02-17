@@ -14,7 +14,7 @@ from pangolin import Palmer
 import tomial_tooth_collection_api
 
 from tomial_clicky_tooth._qapp import app
-from tomial_clicky_tooth import _csv
+from tomial_clicky_tooth import _csv_io
 from tomial_clicky_tooth._ui import ManualLandmarkSelection
 from tests import xvfb_size, select_file
 from tests.test_csv import INVALID_CSVs, assert_text_equivalent
@@ -257,7 +257,7 @@ def test_paste():
     # Test that various invalid CSVs don't write to the table before realising
     # that they are invalid.
     for text in INVALID_CSVs:
-        assert _csv.parse_points(text) is None
+        assert _csv_io.parse_points(text) is None
         pyperclip.copy(text)
         self.table.paste_button.click()
         assert np.all(self.get_points() == points)

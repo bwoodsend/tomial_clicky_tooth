@@ -6,7 +6,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 import pyperclip
 
 from tomial_clicky_tooth._qapp import app
-from tomial_clicky_tooth import _misc, _csv
+from tomial_clicky_tooth import _misc, _csv_io
 
 
 class _QTable(QtWidgets.QTableWidget):
@@ -207,7 +207,7 @@ class LandmarkTable(QtWidgets.QWidget):
     def _save(self, path):
         if path:
             with open(path, "w", encoding="utf-8") as f:
-                f.write(_csv.writes(np.array(self), names=self.names))
+                f.write(_csv_io.writes(np.array(self), names=self.names))
 
     def default_save_name(self):
         return ""
@@ -229,7 +229,7 @@ class LandmarkTable(QtWidgets.QWidget):
         text = pyperclip.paste()
         if not text:
             return
-        points = _csv.parse_points(text)
+        points = _csv_io.parse_points(text)
         if points is None:
             return
         start = self.highlighted_rows()[0]

@@ -6,7 +6,7 @@ import numpy as np
 from PyQt5 import QtWidgets, QtCore
 
 from tomial_clicky_tooth._qapp import app
-from tomial_clicky_tooth import _csv
+from tomial_clicky_tooth import _csv_io
 from tomial_clicky_tooth._clicker import ClickerQtWidget
 from tomial_clicky_tooth._table import LandmarkTable
 
@@ -161,7 +161,7 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
 
     def set_points(self, points):
         if isinstance(points, (str, os.PathLike)):
-            points = _csv.read(points)
+            points = _csv_io.read(points)
 
         self.set_clicker_points(points)
         self.table[:] = points
