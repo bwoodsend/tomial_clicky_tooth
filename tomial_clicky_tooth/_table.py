@@ -226,7 +226,8 @@ class LandmarkTable(QtWidgets.QWidget):
         points = _csv_io.parse_points(text)
         if points is None:
             return
-        start = self.highlighted_rows()[0]
+        rows = self.highlighted_rows()
+        start = rows[0] if rows else 0
         for (i, point) in zip(range(start, len(self)), points):
             self[i] = point
         self.landmarks_changed.emit(np.array(self))

@@ -287,6 +287,13 @@ def test_paste():
     assert self.clicker.cursors[1].point == (1, .5, .3)
     assert self.clicker.cursors[3].point == (1, .5, .3)
 
+    # With nothing selected, paste starting from the top.
+    select_rows(self)
+    self.table.paste()
+    assert len(self.clicker.cursors) == 2
+    assert self.clicker.cursors[1].point == (1, .5, .3)
+    assert self.clicker.cursors[3].point == (3, .2, .6)
+
     self.close()
 
 
