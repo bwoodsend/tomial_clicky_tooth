@@ -135,7 +135,8 @@ class ClickerQtWidget(vpl.QtFigure2):
             self.update()
 
     def _spawn_cursor(self, xyz, key=None):
-        key = key or self.key_gen()
+        if key is None:
+            key = self.key_gen()
         if key in self.cursors:
             self.remove_cursor_key(key)
 
