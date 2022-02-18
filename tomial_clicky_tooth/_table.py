@@ -111,7 +111,8 @@ class LandmarkTable(QtWidgets.QWidget):
         ]):
             buttons_layout.addWidget(_button, *divmod(i, 2))
 
-        self.delete_button.setShortcut(QtCore.Qt.Key_Delete)
+        self.delete_button.setShortcut(QtCore.Qt.Key_Delete \
+            if platform.system() != "Darwin" else QtCore.Qt.Key_Backspace)
         self.cut_button.setShortcut(QtGui.QKeySequence.StandardKey.Cut)
         self.copy_button.setShortcut(QtGui.QKeySequence.StandardKey.Copy)
         self.paste_button.setShortcut(QtGui.QKeySequence.StandardKey.Paste)
