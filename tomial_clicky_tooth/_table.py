@@ -10,11 +10,6 @@ from tomial_clicky_tooth import _misc, _csv_io
 
 
 class _QTable(QtWidgets.QTableWidget):
-
-    # On macOS, the scroll bar hovers over the table instead of slotting in
-    # next to it.
-    ignore_scroll_bar_width = platform.system() == "Darwin"
-
     def keyPressEvent(self, event):
         if event.modifiers() == QtCore.Qt.NoModifier:
             if event.key() in (QtCore.Qt.Key_Left, QtCore.Qt.Key_Right):
@@ -30,9 +25,8 @@ class _QTable(QtWidgets.QTableWidget):
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         width = self.verticalHeader().width() + 2
-        if not self.ignore_scroll_bar_width:  # pragma: no cover
-            if self.verticalScrollBar().isVisible():
-                width += self.verticalScrollBar().sizeHint().width()
+        if self.verticalScrollBar().isVisible():
+            width += self.verticalScrollBar().sizeHint().width()
         for i in range(self.columnCount()):
             width += self.columnWidth(i)
 
