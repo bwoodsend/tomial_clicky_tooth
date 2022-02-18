@@ -196,13 +196,14 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
 
     def keyPressEvent(self, event):
         # No shift/ctrl/alt/etc keys pressed
-        if event.modifiers() == QtCore.Qt.NoModifier:
+        if int(event.modifiers() & (~QtCore.Qt.KeypadModifier)) == 0:
             if event.key() == QtCore.Qt.Key_Left:
                 self.switch_model("<")
-                event.accept()
+                return
             elif event.key() == QtCore.Qt.Key_Right:
                 self.switch_model(">")
-                event.accept()
+                return
+        self.table.table.keyPressEvent(event)
 
     def closeEvent(self, event):
         self.clicker.closeEvent(event)

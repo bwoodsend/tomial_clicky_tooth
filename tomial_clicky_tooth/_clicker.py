@@ -2,7 +2,7 @@ import itertools
 from pathlib import Path
 
 import numpy as np
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore
 import vtkplotlib as vpl
 from motmot import Mesh
 
@@ -11,14 +11,6 @@ class Colors:
     BACKGROUND = (40, 80, 150)
     MARKER = "black"
     HIGHLIGHTED = (.9, 0, 0)
-
-
-def _vtk_key_to_Qt(code, symbol):
-    if code:
-        return ord(code)
-    else:
-        return getattr(QtCore.Qt, "Key_" + symbol, None) \
-            or getattr(QtCore.Qt, "Key_" + symbol.split("_")[0], None)
 
 
 class ClickerQtWidget(vpl.QtFigure2):
@@ -43,9 +35,13 @@ class ClickerQtWidget(vpl.QtFigure2):
                        if i not in self.cursors.keys()).__next__
         self.key_gen = key_gen
 
+        # Disable VTK's default behaviour of translating QKeyEvents to the VTK
+        # equivalents. Instead forward events up the usual chain of this widget
+        # and its parents.
+        self.vtkWidget.keyPressEvent = self.keyPressEvent
+
         vpl.interactive.OnClick("Left", self, self.left_click_cb)
         vpl.interactive.OnClick("Right", self, self.right_click_cb)
-        self.style.AddObserver("KeyPressEvent", self.key_press_cb)
         self._reset_camera = False
 
     def left_click_cb(self, pick: vpl.interactive.pick):
@@ -58,15 +54,6 @@ class ClickerQtWidget(vpl.QtFigure2):
             if cursor is not None:
                 self.remove_cursor(cursor)
                 self.cursor_changed.emit(cursor, None)
-
-    def key_press_cb(self, style, event_name):
-        modifiers = QtCore.Qt.KeyboardModifiers()
-        key = _vtk_key_to_Qt(style.GetInteractor().GetKeyCode(),
-                             style.GetInteractor().GetKeySym())
-        if key is None:
-            return
-        event = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, key, modifiers)
-        QtWidgets.QApplication.sendEvent(self, event)
 
     def open_stl(self, stl_path):
         if stl_path is None:
