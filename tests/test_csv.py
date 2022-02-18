@@ -61,5 +61,5 @@ def test_writes():
 
 def assert_text_equivalent(x, y):
     """A string equals assertion which ignores mismatching line endings."""
-    x, y = (re.sub("\r\n|\r|\n", "\n", i) for i in (x, y))
-    assert x == y
+    _x, _y = (re.sub("\r\n|\r|\n", "\n", i) for i in (x, y))
+    assert _x == _y, f"\n{repr(x)} !=\n{repr(y)}\n"
