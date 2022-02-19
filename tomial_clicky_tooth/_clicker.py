@@ -31,8 +31,7 @@ class ClickerQtWidget(vpl.QtFigure2):
 
         self.cursors = {}
         if key_gen is None:
-            key_gen = (i for i in itertools.count()
-                       if i not in self.cursors.keys()).__next__
+            key_gen = itertools.count().__next__
         self.key_gen = key_gen
 
         # Disable VTK's default behaviour of translating QKeyEvents to the VTK
@@ -52,12 +51,10 @@ class ClickerQtWidget(vpl.QtFigure2):
         if pick.actor is not None:
             cursor = self.nearest_cursor(np.array(pick.point))
             if cursor is not None:
-                self.remove_cursor(cursor)
+                self.remove_cursor(cursor.key)
                 self.cursor_changed.emit(cursor, None)
 
     def open_stl(self, stl_path):
-        if stl_path is None:
-            return
         self.close_stl()
 
         # Read the stl directly from file
@@ -112,33 +109,26 @@ class ClickerQtWidget(vpl.QtFigure2):
 
     @landmarks.setter
     def landmarks(self, landmarks):
-        self.clear(update=False)
+        self.clear()
         for (i, j) in zip(*landmarks):
             if j is not None and np.isfinite(j).all():
                 self._spawn_cursor(j, i)
         self.update()
 
-    def remove_cursor_key(self, key, cb=False):
-        return self.remove_cursor(self.cursors.pop(key), cb)
-
-    def remove_cursor(self, cursor, cb=False):
-        self.cursors.pop(cursor.key, None)
+    def remove_cursor(self, key):
+        cursor = self.cursors.pop(key)
         self -= cursor
-        if cb:
-            self.cursor_changed.emit(cursor, None)
         return cursor
 
-    def clear(self, update=True):
+    def clear(self):
         for key in list(self.cursors):
-            self.remove_cursor_key(key, cb=False)
-        if update:
-            self.update()
+            self.remove_cursor(key)
 
     def _spawn_cursor(self, xyz, key=None):
         if key is None:
             key = self.key_gen()
         if key in self.cursors:
-            self.remove_cursor_key(key)
+            self.remove_cursor(key)
 
         cursor = vpl.scatter(xyz, color=Colors.MARKER, fig=self,
                              use_cursors=True)

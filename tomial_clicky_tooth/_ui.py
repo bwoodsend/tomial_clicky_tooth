@@ -22,7 +22,6 @@ class SwitchModelButton(QtWidgets.QPushButton):
 
     def callback(self, direction):
         """Override this method in the parent class."""
-        print(self.text(), "released")
 
 
 def show_clicker(show_name):

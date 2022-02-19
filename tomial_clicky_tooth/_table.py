@@ -77,10 +77,7 @@ class LandmarkTable(QtWidgets.QWidget):
         self.load_table_contents(names)
         self.table.setWordWrap(True)
         self.table.itemChanged.connect(self.table.adjustSize)
-
-        self._suppress_itemSelectionChanged = False
-        self.table.itemSelectionChanged.connect(
-            self._filter_itemSelectionChanged)
+        self.table.itemSelectionChanged.connect(self.itemSelectionChanged.emit)
 
         self.increment_focus()
 
@@ -149,9 +146,6 @@ class LandmarkTable(QtWidgets.QWidget):
                 self.table.selectRow(i)
                 return
 
-        if len(current_focus) == 0:
-            self.table.selectRow(i)
-
     def highlighted_rows(self):
         return sorted(set([i.row() for i in self.table.selectedItems()]))
 
@@ -205,10 +199,6 @@ class LandmarkTable(QtWidgets.QWidget):
 
     def default_save_name(self):
         return ""
-
-    def _filter_itemSelectionChanged(self):
-        if not self._suppress_itemSelectionChanged:
-            self.itemSelectionChanged.emit()
 
     def cut(self):
         self.copy()
