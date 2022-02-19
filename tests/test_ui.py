@@ -122,13 +122,42 @@ def test_clicking():
     assert self.table.highlighted_rows() == [2]
     assert np.allclose(self.table[1], points[1], atol=1)
     assert np.allclose(self.clicker.cursors[1].point, points[1], atol=1)
+
+    highlight(self.clicker.stl_plot, points[3])
+    select_rows(self, 3)
+    click(self, points[3])
+    assert self.table.highlighted_rows() == [3]
+    assert np.allclose(self.table[3], points[3], atol=1)
+    assert np.allclose(self.clicker.cursors[3].point, points[3], atol=1)
+
+    highlight(self.clicker.stl_plot, points[4])
+    click(self, points[4])
+    assert self.table.highlighted_rows() == [3]
+    assert np.allclose(self.table[3], points[4], atol=1)
+    assert np.allclose(self.clicker.cursors[3].point, points[4], atol=1)
+
+    select_rows(self)
+    highlight(self.clicker.stl_plot, points[5])
+    click(self, points[5])
+    assert self.table.highlighted_rows() == [2]
+    assert np.allclose(self.table[2], points[5], atol=1)
+    assert np.allclose(self.clicker.cursors[2].point, points[5], atol=1)
+
     self.clicker.stl_plot.scalars = None
 
+    click(self, points[5], button="R")
+    assert sorted(self.clicker.cursors.keys()) == [0, 1, 3]
     click(self, points[4], button="R")
     assert sorted(self.clicker.cursors.keys()) == [0, 1]
     click(self, points[0], button="R")
     assert sorted(self.clicker.cursors.keys()) == [1]
     click(self, points[0], button="R")
+    assert sorted(self.clicker.cursors.keys()) == [1]
+
+    # Clicking on empty space should do nothing.
+    click_2d(self, 10, 10)
+    assert sorted(self.clicker.cursors.keys()) == [1]
+    click_2d(self, 10, 10, button="R")
     assert sorted(self.clicker.cursors.keys()) == [1]
 
     self.close()
