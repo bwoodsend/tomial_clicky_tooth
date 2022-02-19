@@ -68,14 +68,17 @@ def tips(mesh, occlusal):
     when the model is viewed from above.
 
     """
-    return mesh.vertices[mesh.local_maxima(occlusal(mesh.vertices))]
+    heights = occlusal(mesh.vertices)
+    ids = mesh.local_maxima(heights, boundaries=False)
+    ids = ids[np.argsort(heights[ids])[::-1]]
+    return mesh.vertices[ids]
 
 
 def remove_close(points):
-    """Pick out 10 points which are at least 10mm apart from each other."""
-    out = np.empty((10, 3), dtype=points.dtype)
+    """Pick out 8 points which are at least 10mm apart from each other."""
+    out = np.empty((8, 3), dtype=points.dtype)
     points = iter(points)
-    for i in range(10):
+    for i in range(8):
         for point in points:
             if (geometry.magnitude_sqr(out[:i] - point) > 100).all():
                 out[i] = point
@@ -161,7 +164,7 @@ def test_highlight():
 
 def test_delete():
     """Test the delete and clear all buttons."""
-    self = ManualLandmarkSelection(Palmer.range("LL5", "LR5"),
+    self = ManualLandmarkSelection(Palmer.range("LL4", "LR4"),
                                    tomial_tooth_collection_api.model("1L"))
     self.show()
     points = remove_close(tips(self.clicker.mesh, self.clicker.odom.occlusal))
@@ -171,13 +174,13 @@ def test_delete():
     self.table.delete_button.click()
     for i in range(3):
         assert i not in self.clicker.cursors
-    for i in range(3, 10):
+    for i in range(3, 8):
         assert self.clicker.cursors[i]
     assert self.table[:3] == [None] * 3
     assert (self.table[3:] == points[3:]).all()
 
     self.table.clear_all_button.click()
-    assert self.table[:] == [None] * 10
+    assert self.table[:] == [None] * 8
     assert self.clicker.cursors == {}
     assert len(self.clicker.plots) == 1
 
