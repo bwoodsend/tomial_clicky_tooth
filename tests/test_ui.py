@@ -17,7 +17,7 @@ import tomial_tooth_collection_api
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv_io
 from tomial_clicky_tooth._ui import ManualLandmarkSelection
-from tests import xvfb_size, select_file
+from tests import xvfb_size, select_file, CloseBlockingDialog
 from tests.test_csv import INVALID_CSVs, assert_text_equivalent
 
 pytestmark = pytest.mark.order(5)
@@ -463,5 +463,30 @@ def test_model_switching():
     self.buttons[0].click()
     assert self.clicker.stl_plot is old_stl_plot
     assert np.array_equal(self.get_points()[:4], old_points)
+
+    self.close()
+
+
+def test_no_model_open():
+    """Make sure that we can't cause a crash by pressing buttons when no model
+    is loaded."""
+    self = ManualLandmarkSelection(Palmer.range())
+    self.show()
+    app.processEvents()
+
+    with CloseBlockingDialog():
+        self.open_model()
+    assert self.clicker.stl_path is None
+
+    self.buttons[0].click()
+
+    with CloseBlockingDialog():
+        self.table.save()
+
+    self.set_points([[1, 2, 3]])
+    read, write = os.pipe()
+    self.table._save(write)
+    with open(read, "rb") as f:
+        assert f.readlines()[1].startswith(b"*L8,1.0,2.0,3.0")
 
     self.close()

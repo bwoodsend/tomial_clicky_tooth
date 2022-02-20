@@ -52,7 +52,7 @@ class CloseBlockingDialog(object):
         return self
 
     def _handle_dialogs(self):
-        for widget in app().allWidgets():
+        for widget in app.allWidgets():
             if isinstance(widget, QtWidgets.QDialog) and widget.isVisible():
                 self._timer.stop()
                 self.closed = widget
