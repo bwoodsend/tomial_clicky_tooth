@@ -197,7 +197,7 @@ class LandmarkTable(QtWidgets.QWidget):
         with open(path, "wb") as f:
             f.write(_csv_io.writes(np.array(self), names=self.names).encode())
 
-    def default_save_name(self):
+    def default_save_name(self):  # pragma: no cover
         return ""
 
     def cut(self):

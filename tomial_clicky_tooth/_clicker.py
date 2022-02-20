@@ -44,11 +44,11 @@ class ClickerQtWidget(vpl.QtFigure2):
         self._reset_camera = False
 
     def left_click_cb(self, pick: vpl.interactive.pick):
-        if pick.actor is self.stl_plot.actor:
+        if pick.actor is self.stl_plot.actor:  # pragma: no branch
             self.spawn_cursor(pick.point)
 
     def right_click_cb(self, pick: vpl.interactive.pick):
-        if pick.actor is not None:
+        if pick.actor is not None:  # pragma: no branch
             cursor = self.nearest_cursor(np.array(pick.point))
             if cursor is not None:
                 self.remove_cursor(cursor.key)

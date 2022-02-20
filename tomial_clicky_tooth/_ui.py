@@ -212,7 +212,7 @@ SUFFIXES = [".stl", ".stl.gz", ".stl.bz2", ".stl.xz"]
 SUFFIX_RE = re.compile("(.*)(" + "|".join(map(re.escape, SUFFIXES)) + ")$")
 
 
-class Interact(QtCore.QThread):
+class Interact(QtCore.QThread):  # pragma: no cover
     def __init__(self, namespace):
         self.namespace = namespace
         super().__init__()
@@ -227,10 +227,11 @@ class Interact(QtCore.QThread):
         code.InteractiveConsole(self.namespace).interact()
 
 
-def main(names, path=None, points=None):
+def main(names, path=None, points=None, debug=False):
     self = ManualLandmarkSelection(names, path, points)
-    t = Interact({**locals(), **globals()})
-    t.start()
+    if debug:  # pragma: no cover
+        t = Interact({**locals(), **globals()})
+        t.start()
     self.show()
     app.exec()
 
