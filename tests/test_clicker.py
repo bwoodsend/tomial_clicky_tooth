@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 import tomial_tooth_collection_api
 import vtkplotlib as vpl
@@ -39,3 +41,18 @@ def _principle_color(figure):
     figure.background_color = "black"
     image = vpl.screenshot_fig(fig=figure)
     return image[(image != 0).any(-1)].mean(0)
+
+
+@pytest.mark.filterwarnings("ignore")
+def test_non_dental_model():
+    """Test opening a model that is unlikely to pass through the pre-orientation
+    step due to its not being a dental model. The pre-orientation should be
+    skipped over silently."""
+    self = ClickerQtWidget()
+    self.show(block=False)
+
+    self.open_stl(Path(__file__).with_name("one-triangle.stl"))
+    assert self.odom is None
+    assert self.mesh is not None
+
+    self.close()

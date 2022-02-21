@@ -31,6 +31,7 @@ class ClickerQtWidget(vpl.QtFigure2):
         self.stl_plot = None
         self.stl_path = None
         self.mesh = None
+        self.odom = None
         if path is not None:
             try:
                 self.open_stl(path)
@@ -96,8 +97,8 @@ class ClickerQtWidget(vpl.QtFigure2):
             vpl.view(camera_position=self.odom.occlusal,
                      up_view=self.odom.forwards, fig=self)
 
-        except () as ex:
-            print(repr(ex))
+        except:
+            pass
 
         self.reset_camera()
 
