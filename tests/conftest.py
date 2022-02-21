@@ -38,3 +38,20 @@ def pytest_report_header(config):
     """Add virtual screen size to pytest's header."""
     from tests import xvfb_size
     return ["Xvfb display: {}".format(xvfb_size())]
+
+
+@pytest.fixture(autouse=True)
+def close_all_windows():
+    """Close all open Qt Windows before and after each test."""
+    from tomial_clicky_tooth._qapp import app
+
+    def _close_all_windows():
+        for window in app.allWindows():
+            try:
+                window.close()
+            except RuntimeError:
+                pass
+
+    _close_all_windows()
+    yield
+    _close_all_windows()
