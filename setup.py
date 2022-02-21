@@ -37,6 +37,7 @@ setup(
             "mss",
             "psutil",
             "pytest-cov",
+            "pytest-timeout",
             "tomial_tooth_collection_api @ git+ssh://git@github.com/bwoodsend/tomial_tooth_collection_api.git@0bd1fe8b9b82558712b38ce276a3633c7600bad5",
         ]
     },
