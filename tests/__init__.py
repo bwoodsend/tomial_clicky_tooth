@@ -53,10 +53,11 @@ class CloseBlockingDialog(object):
 
     def _handle_dialogs(self):
         for widget in app.allWidgets():
-            if isinstance(widget, QtWidgets.QDialog) and widget.isVisible():
-                self._timer.stop()
-                self.closed = widget
-                self.handle_dialog(widget)
+            if isinstance(widget, (QtWidgets.QDialog, self.type)):
+                if widget.isVisible():
+                    self._timer.stop()
+                    self.closed = widget
+                    self.handle_dialog(widget)
 
     @staticmethod
     def handle_dialog(dialog: QtWidgets.QDialog):
