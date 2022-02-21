@@ -16,15 +16,6 @@ def multiitemsable(singular):
             return singular(self, index, *value)
         if isinstance(index, list):
             return [singular(self, index, *value) for index in index]
-        if isinstance(index, np.ndarray):
-            if value:
-                value = (np.asarray(value[0]).flat,)
-            values = np.array(
-                [singular(self, *args) for args in zip(index.flat, *value)])
-            values = values.reshape(index.shape + (-1,))
-            if values.shape[-1] == 1:
-                values = values[..., 0]
-            return values
         return singular(self, index, *value)
 
     return __x_item__
