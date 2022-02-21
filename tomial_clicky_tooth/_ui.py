@@ -8,7 +8,7 @@ from PyQt5 import QtWidgets, QtCore
 
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv_io
-from tomial_clicky_tooth._clicker import ClickerQtWidget
+from tomial_clicky_tooth._clicker import ClickerQtWidget, InvalidModelError
 from tomial_clicky_tooth._table import LandmarkTable
 
 
@@ -123,11 +123,22 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self._open_model(path)
 
     def _open_model(self, path):
-        if path:
-            path = Path(path)
-            self.setWindowTitle(path.stem)
-            self.clicker.close_stl()
+        if not path:
+            return
+        path = Path(path)
+        self.setWindowTitle(path.stem)
+        self.clicker.close_stl()
+        try:
             self.clicker.open_stl(path)
+        except InvalidModelError:
+            self.table.clear_all()
+        else:
+            csv_path = path.with_name(SUFFIX_RE.sub(r"\1.csv", path.name))
+            if csv_path.exists():
+                self.set_points(csv_path)
+            else:
+                self.table.clear_all()
+        self.clicker.update()
 
     def table_selection_changed_cb(self):
         """Highlights the markers on the model that are selected in the table"""
@@ -185,13 +196,7 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
             except ValueError:
                 return
             path = paths[(index + {"<": -1, ">": 1}[direction]) % len(paths)]
-            self.clicker.open_stl(path)
-            csv_path = path.with_name(SUFFIX_RE.sub(r"\1.csv", path.name))
-            if csv_path.exists():
-                self.set_points(csv_path)
-            else:
-                self.table.clear_all()
-            self.clicker.update()
+            self._open_model(path)
 
     def keyPressEvent(self, event):
         # No shift/ctrl/alt/etc keys pressed

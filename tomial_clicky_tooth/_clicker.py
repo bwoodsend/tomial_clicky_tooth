@@ -13,6 +13,10 @@ class Colors:
     HIGHLIGHTED = (.9, 0, 0)
 
 
+class InvalidModelError(Exception):
+    pass
+
+
 class ClickerQtWidget(vpl.QtFigure2):
     def __init__(self, path=None, parent=None, key_gen=None):
         super().__init__(parent=parent)
@@ -26,8 +30,12 @@ class ClickerQtWidget(vpl.QtFigure2):
 
         self.stl_plot = None
         self.stl_path = None
+        self.mesh = None
         if path is not None:
-            self.open_stl(path)
+            try:
+                self.open_stl(path)
+            except InvalidModelError:
+                pass
 
         self.cursors = {}
         if key_gen is None:
@@ -56,12 +64,21 @@ class ClickerQtWidget(vpl.QtFigure2):
 
     def open_stl(self, stl_path):
         self.close_stl()
+        self.stl_path = Path(stl_path)
 
         # Read the stl directly from file
-        mesh = Mesh(stl_path)
-        self.stl_path = Path(stl_path)
-        self.mesh = mesh
+        try:
+            mesh = Mesh(stl_path)
+        except:
+            stl_path = stl_path.resolve()
+            QtWidgets.QMessageBox.critical(
+                self, "Invalid model file",
+                f'<a href="{stl_path.as_uri()}">{stl_path.name}</a> located in '
+                f'<a href="{stl_path.parent.as_uri()}">{stl_path.parent}</a> is '
+                f'invalid.')
+            raise InvalidModelError
 
+        self.mesh = mesh
         self.stl_plot = vpl.mesh_plot(mesh, fig=self)
 
         try:
@@ -90,6 +107,9 @@ class ClickerQtWidget(vpl.QtFigure2):
     def close_stl(self):
         if self.stl_plot is not None:
             self -= self.stl_plot
+            self.stl_path = None
+            self.mesh = None
+            self.stl_plot = None
         self.stl_plot = None
 
     def nearest_cursor(self, xyz, max_distance=3):

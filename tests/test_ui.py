@@ -372,6 +372,7 @@ def test_save():
         _test_write("foo.csv")
         with select_file(tomial_tooth_collection_api.model("1L")):
             self.open_model()
+        self.set_points(points)
         assert self.table.default_save_name() == "1L.csv"
         _test_write("1L.csv")
 
@@ -488,5 +489,43 @@ def test_no_model_open():
     self.table._save(write)
     with open(read, "rb") as f:
         assert f.readlines()[1].startswith(b"*L8,1.0,2.0,3.0")
+
+    self.close()
+
+
+def test_invalid_model(tmpdir):
+    """Test the various points where an invalid model may be loaded."""
+
+    model, invalid, landmarks = [
+        Path(shutil.copy(
+            i, tmpdir)) for i in (tomial_tooth_collection_api.model("1L"),
+                                  Path(__file__).with_name("invalid.stl"),
+                                  Path(__file__).with_name("1L.csv"))
+    ]
+
+    # Open an invalid model on startup.
+    with CloseBlockingDialog():
+        self = ManualLandmarkSelection(Palmer.range(), invalid)
+    self.show()
+    app.processEvents()
+    assert self.clicker.stl_path == invalid
+    assert self.clicker.mesh is None
+    assert self.clicker.stl_plot is None
+
+    # Via the open model dialog after opening a functional model.
+    self._open_model(model)
+    assert self.clicker.stl_path == model
+    assert np.isfinite(self.clicker.landmarks[1]).sum() == 3 * 14
+    with CloseBlockingDialog():
+        self._open_model(invalid)
+    assert self.clicker.stl_path == invalid
+    assert self.clicker.mesh is None
+    assert len(self.clicker.cursors) == 0
+
+    # By switching models via the buttons.
+    self.buttons[0].click()
+    assert self.clicker.stl_path == model
+    with CloseBlockingDialog():
+        self.buttons[0].click()
 
     self.close()
