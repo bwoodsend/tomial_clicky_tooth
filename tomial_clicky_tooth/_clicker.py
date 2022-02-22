@@ -111,6 +111,7 @@ class ClickerQtWidget(vpl.QtFigure2):
             self.stl_path = None
             self.mesh = None
             self.stl_plot = None
+            self.odom = None
         self.stl_plot = None
 
     def nearest_cursor(self, xyz, max_distance=3):
