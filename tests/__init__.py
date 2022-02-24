@@ -74,30 +74,39 @@ class CloseBlockingDialog(object):
 
 class MockFileDialog:
     def __init__(self, *paths):
-        self.paths = [os.path.realpath(i) for i in paths]
+        self.paths = [i if i is None else os.path.realpath(i) for i in paths]
 
     @wraps(QFileDialog.getOpenFileName)
     def getOpenFileName(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
         assert len(self.paths) == 1
+        if self.paths[0] is None:
+            return None, None
         return self.paths[0], os.path.splitext(self.paths[0])[1]
 
+    @wraps(QFileDialog.getOpenFileNames)
     def getOpenFileNames(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
+        if self.paths[0] is None:
+            return None, None
         return self.paths, os.path.splitext(self.paths[0])[1]
 
+    @wraps(QFileDialog.getSaveFileName)
     def getSaveFileName(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
+        if self.paths[0] is None:
+            return None, None
         return self.paths[0], os.path.splitext(self.paths[0])
 
+    @wraps(QFileDialog.getExistingDirectory)
     def getExistingDirectory(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
         assert len(self.paths) == 1
-        assert os.path.isdir(self.paths[0])
+        assert self.paths[0] is None or os.path.isdir(self.paths[0])
         return self.paths[0]
 
 

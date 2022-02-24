@@ -475,13 +475,13 @@ def test_no_model_open():
     self.show()
     app.processEvents()
 
-    with CloseBlockingDialog():
+    with select_file(None):
         self.open_model()
     assert self.clicker.stl_path is None
 
     self.buttons[0].click()
 
-    with CloseBlockingDialog():
+    with select_file(None):
         self.table.save()
 
     self.set_points([[1, 2, 3]])
