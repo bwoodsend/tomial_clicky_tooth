@@ -17,8 +17,8 @@ class InvalidModelError(Exception):
     pass
 
 
-class ClickerQtWidget(vpl.QtFigure2):
-    def __init__(self, path=None, parent=None, key_gen=None):
+class ClickableFigure(vpl.QtFigure2):
+    def __init__(self, initial_path=None, parent=None, key_generator=None):
         super().__init__(parent=parent)
         vpl.scf(None)
 
@@ -28,20 +28,20 @@ class ClickerQtWidget(vpl.QtFigure2):
             QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
                                   QtWidgets.QSizePolicy.MinimumExpanding))
 
-        self.stl_plot = None
-        self.stl_path = None
+        self.mesh_plot = None
+        self.path = None
         self.mesh = None
-        self.odom = None
-        if path is not None:
+        self.odometry = None
+        if initial_path is not None:
             try:
-                self.open_stl(path)
+                self.open_model(initial_path)
             except InvalidModelError:
                 pass
 
         self.cursors = {}
-        if key_gen is None:
-            key_gen = itertools.count().__next__
-        self.key_gen = key_gen
+        if key_generator is None:
+            key_generator = itertools.count().__next__
+        self.key_generator = key_generator
 
         # Disable VTK's default behaviour of translating QKeyEvents to the VTK
         # equivalents. Instead forward events up the usual chain of this widget
@@ -53,7 +53,7 @@ class ClickerQtWidget(vpl.QtFigure2):
         self._reset_camera = False
 
     def left_click_cb(self, pick: vpl.interactive.pick):
-        if pick.actor is self.stl_plot.actor:  # pragma: no branch
+        if pick.actor is self.mesh_plot.actor:  # pragma: no branch
             self.spawn_cursor(pick.point)
 
     def right_click_cb(self, pick: vpl.interactive.pick):
@@ -63,24 +63,24 @@ class ClickerQtWidget(vpl.QtFigure2):
                 self.remove_cursor(cursor.key)
                 self.cursor_changed.emit(cursor, None)
 
-    def open_stl(self, stl_path):
+    def open_model(self, path):
         self.close_stl()
-        self.stl_path = Path(stl_path)
+        self.path = Path(path)
 
         # Read the stl directly from file
         try:
-            mesh = Mesh(stl_path)
+            mesh = Mesh(path)
         except:
-            stl_path = stl_path.resolve()
+            path = path.resolve()
             QtWidgets.QMessageBox.critical(
                 self, "Invalid model file",
-                f'<a href="{stl_path.as_uri()}">{stl_path.name}</a> located in '
-                f'<a href="{stl_path.parent.as_uri()}">{stl_path.parent}</a> is '
+                f'<a href="{path.as_uri()}">{path.name}</a> located in '
+                f'<a href="{path.parent.as_uri()}">{path.parent}</a> is '
                 f'invalid.')
             raise InvalidModelError
 
         self.mesh = mesh
-        self.stl_plot = vpl.mesh_plot(mesh, fig=self)
+        self.mesh_plot = vpl.mesh_plot(mesh, fig=self)
 
         try:
             # Just because we can...
@@ -90,12 +90,11 @@ class ClickerQtWidget(vpl.QtFigure2):
             from tomial_odometry import Odometry
             from pangolin import arch_type
 
-            self.odom = Odometry(mesh, arch_type(Path(self.stl_path).stem))
+            self.odometry = Odometry(mesh, arch_type(Path(self.path).stem))
             self.view_buttons.init_default()
-            self.view_buttons.rotate(
-                np.array([self.odom.right, self.odom.forwards, self.odom.up]))
-            vpl.view(camera_position=self.odom.occlusal,
-                     up_view=self.odom.forwards, fig=self)
+            self.view_buttons.rotate(self.odometry.axes)
+            vpl.view(camera_position=self.odometry.occlusal,
+                     up_view=self.odometry.forwards, fig=self)
 
         except:
             pass
@@ -106,13 +105,13 @@ class ClickerQtWidget(vpl.QtFigure2):
     cursor_changed = QtCore.pyqtSignal(object, object)
 
     def close_stl(self):
-        if self.stl_plot is not None:
-            self -= self.stl_plot
-            self.stl_path = None
+        if self.mesh_plot is not None:
+            self -= self.mesh_plot
+            self.path = None
             self.mesh = None
-            self.stl_plot = None
-            self.odom = None
-        self.stl_plot = None
+            self.mesh_plot = None
+            self.odometry = None
+        self.mesh_plot = None
 
     def nearest_cursor(self, xyz, max_distance=3):
         best = None
@@ -148,7 +147,7 @@ class ClickerQtWidget(vpl.QtFigure2):
 
     def _spawn_cursor(self, xyz, key=None):
         if key is None:
-            key = self.key_gen()
+            key = self.key_generator()
         if key in self.cursors:
             self.remove_cursor(key)
 

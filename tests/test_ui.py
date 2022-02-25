@@ -16,7 +16,7 @@ import tomial_tooth_collection_api
 
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv_io
-from tomial_clicky_tooth._ui import ManualLandmarkSelection
+from tomial_clicky_tooth._ui import UI
 from tests import xvfb_size, select_file, CloseBlockingDialog
 from tests.test_csv import INVALID_CSVs, assert_text_equivalent
 
@@ -100,7 +100,7 @@ def select_rows(self, *row_numbers):
 
 def test_clicking():
     """Test left and right clicking on the renderer."""
-    self = ManualLandmarkSelection(["a", "b", "c", "d"])
+    self = UI(["a", "b", "c", "d"])
     self.show()
 
     self._open_model(tomial_tooth_collection_api.model("1L"))
@@ -108,8 +108,9 @@ def test_clicking():
     assert np.array(self.table).shape == (4, 3)
     assert np.isnan(np.array(self.table)).all()
 
-    points = remove_close(tips(self.clicker.mesh, self.clicker.odom.occlusal))
-    highlight(self.clicker.stl_plot, points[0])
+    points = remove_close(
+        tips(self.clicker.mesh, self.clicker.odometry.occlusal))
+    highlight(self.clicker.mesh_plot, points[0])
 
     assert self.table.highlighted_rows() == [0]
     click(self, points[0])
@@ -117,33 +118,33 @@ def test_clicking():
     assert np.allclose(self.table[0], points[0], atol=1)
     assert np.allclose(self.clicker.cursors[0].point, points[0], atol=1)
 
-    highlight(self.clicker.stl_plot, points[1])
+    highlight(self.clicker.mesh_plot, points[1])
     click(self, points[1])
     assert self.table.highlighted_rows() == [2]
     assert np.allclose(self.table[1], points[1], atol=1)
     assert np.allclose(self.clicker.cursors[1].point, points[1], atol=1)
 
-    highlight(self.clicker.stl_plot, points[3])
+    highlight(self.clicker.mesh_plot, points[3])
     select_rows(self, 3)
     click(self, points[3])
     assert self.table.highlighted_rows() == [3]
     assert np.allclose(self.table[3], points[3], atol=1)
     assert np.allclose(self.clicker.cursors[3].point, points[3], atol=1)
 
-    highlight(self.clicker.stl_plot, points[4])
+    highlight(self.clicker.mesh_plot, points[4])
     click(self, points[4])
     assert self.table.highlighted_rows() == [3]
     assert np.allclose(self.table[3], points[4], atol=1)
     assert np.allclose(self.clicker.cursors[3].point, points[4], atol=1)
 
     select_rows(self)
-    highlight(self.clicker.stl_plot, points[5])
+    highlight(self.clicker.mesh_plot, points[5])
     click(self, points[5])
     assert self.table.highlighted_rows() == [2]
     assert np.allclose(self.table[2], points[5], atol=1)
     assert np.allclose(self.clicker.cursors[2].point, points[5], atol=1)
 
-    self.clicker.stl_plot.scalars = None
+    self.clicker.mesh_plot.scalars = None
 
     click(self, points[5], button="R")
     assert sorted(self.clicker.cursors.keys()) == [0, 1, 3]
@@ -166,10 +167,11 @@ def test_clicking():
 def test_highlight():
     """Test highlighting table rows highlights the corresponding placed markers
     in the renderer."""
-    self = ManualLandmarkSelection(Palmer.range("LL5", "LR5"),
-                                   tomial_tooth_collection_api.model("1L"))
+    self = UI(Palmer.range("LL5", "LR5"),
+              tomial_tooth_collection_api.model("1L"))
     self.show()
-    points = remove_close(tips(self.clicker.mesh, self.clicker.odom.occlusal))
+    points = remove_close(
+        tips(self.clicker.mesh, self.clicker.odometry.occlusal))
     self.set_points(points)
 
     assert self.clicker.cursors[0].color == (.9, 0, 0)
@@ -193,10 +195,11 @@ def test_highlight():
 
 def test_delete():
     """Test the delete and clear all buttons."""
-    self = ManualLandmarkSelection(Palmer.range("LL4", "LR4"),
-                                   tomial_tooth_collection_api.model("1L"))
+    self = UI(Palmer.range("LL4", "LR4"),
+              tomial_tooth_collection_api.model("1L"))
     self.show()
-    points = remove_close(tips(self.clicker.mesh, self.clicker.odom.occlusal))
+    points = remove_close(
+        tips(self.clicker.mesh, self.clicker.odometry.occlusal))
     self.set_points(points)
 
     select_rows(self, 0, 1, 2)
@@ -229,7 +232,7 @@ def test_table_layout(long_names, show):
             f"The bit on the {i} where the landmark needs to go" for i in names
         ]
 
-    self = ManualLandmarkSelection(names)
+    self = UI(names)
     self._open_model(tomial_tooth_collection_api.model("1L"))
 
     getattr(self, show)()
@@ -270,7 +273,7 @@ def test_table_layout(long_names, show):
 
 def test_paste():
     """Test pasting points into the landmark table."""
-    self = ManualLandmarkSelection(Palmer.range(0, "LR5"))
+    self = UI(Palmer.range(0, "LR5"))
     self.show()
     app.processEvents()
 
@@ -334,7 +337,7 @@ def test_copy():
     pyperclip.copy("")
 
     points = np.c_[np.arange(5) * 5, np.zeros(5), np.ones(5)]
-    self = ManualLandmarkSelection(Palmer.range(0, "LR5"), points=points)
+    self = UI(Palmer.range(0, "LR5"), points=points)
     self.show()
     app.processEvents()
 
@@ -355,7 +358,7 @@ def test_copy():
 
 def test_save():
     points = np.arange(6).reshape((2, 3))
-    self = ManualLandmarkSelection(["foo", "bar"], points=points)
+    self = UI(["foo", "bar"], points=points)
     self.show()
     app.processEvents()
 
@@ -368,12 +371,12 @@ def test_save():
                                    "Landmarks,X,Y,Z\nfoo,0,1,2\nbar,3,4,5\n")
 
     with tempfile.TemporaryDirectory() as root:
-        assert self.table.default_save_name() == ""
+        assert self.table.default_csv_name() == ""
         _test_write("foo.csv")
         with select_file(tomial_tooth_collection_api.model("1L")):
             self.open_model()
         self.set_points(points)
-        assert self.table.default_save_name() == "1L.csv"
+        assert self.table.default_csv_name() == "1L.csv"
         _test_write("1L.csv")
 
     self.close()
@@ -397,43 +400,43 @@ def test_model_switching():
             for name in ["1L", "1U", "2L", "2U"]
         ]
 
-        self = ManualLandmarkSelection(Palmer.range(), stl_path=files[0])
+        self = UI(Palmer.range(), path=files[0])
         self.show()
         app.processEvents()
 
-        assert self.clicker.stl_path == files[0]
+        assert self.clicker.path == files[0]
         self.buttons[1].click()
-        assert self.clicker.stl_path != files[0]
-        assert self.clicker.stl_path in files
+        assert self.clicker.path != files[0]
+        assert self.clicker.path in files
         self.buttons[0].click()
-        assert self.clicker.stl_path == files[0]
+        assert self.clicker.path == files[0]
 
         key_press(self, Qt.Key_Right)
-        assert self.clicker.stl_path != files[0]
+        assert self.clicker.path != files[0]
         key_press(self, Qt.Key_Left)
-        assert self.clicker.stl_path == files[0]
+        assert self.clicker.path == files[0]
 
         key_press(self, Qt.Key_Left, Qt.ShiftModifier)
-        assert self.clicker.stl_path == files[0]
+        assert self.clicker.path == files[0]
         key_press(self.table.table, Qt.Key_Up)
-        assert self.clicker.stl_path == files[0]
+        assert self.clicker.path == files[0]
         key_press(self.table.table, Qt.Key_Left, Qt.ShiftModifier)
-        assert self.clicker.stl_path == files[0]
+        assert self.clicker.path == files[0]
 
         # It shouldn't matter which portion of the UI currently has focus.
         key_press(self.clicker, Qt.Key_Right)
-        assert self.clicker.stl_path != files[0]
+        assert self.clicker.path != files[0]
         key_press(self.clicker.vtkWidget, Qt.Key_Left)
-        assert self.clicker.stl_path == files[0]
+        assert self.clicker.path == files[0]
         key_press(self.table, Qt.Key_Right)
-        assert self.clicker.stl_path != files[0]
+        assert self.clicker.path != files[0]
         key_press(self.table.table, Qt.Key_Left)
-        assert self.clicker.stl_path == files[0]
+        assert self.clicker.path == files[0]
 
         # Check the orientation is adjusting to each model.
-        up = self.clicker.odom.up
-        forwards = self.clicker.odom.forwards
-        while not self.clicker.stl_path.name.startswith("1U"):
+        up = self.clicker.odometry.up
+        forwards = self.clicker.odometry.forwards
+        while not self.clicker.path.name.startswith("1U"):
             self.buttons[0].click()
         view = vpl.view(fig=self.clicker)
         camera_direction = geometry.UnitVector(
@@ -443,7 +446,7 @@ def test_model_switching():
 
         # With a landmarks file present, it should be picked up.
         shutil.copy(Path(__file__).with_name("1L.csv"), root)
-        while not self.clicker.stl_path.name.startswith("1L"):
+        while not self.clicker.path.name.startswith("1L"):
             self.switch_model(">")
         assert len(self.clicker.cursors) == 14
         self.switch_model(">")
@@ -457,12 +460,12 @@ def test_model_switching():
         app.processEvents()
 
     # Verify that nothing happens if the STL is deleted.
-    assert not self.clicker.stl_path.exists()
+    assert not self.clicker.path.exists()
     old_points = np.arange(12).reshape((4, 3))
     self.set_points(old_points)
-    old_stl_plot = self.clicker.stl_plot
+    old_stl_plot = self.clicker.mesh_plot
     self.buttons[0].click()
-    assert self.clicker.stl_plot is old_stl_plot
+    assert self.clicker.mesh_plot is old_stl_plot
     assert np.array_equal(self.get_points()[:4], old_points)
 
     self.close()
@@ -471,13 +474,13 @@ def test_model_switching():
 def test_no_model_open():
     """Make sure that we can't cause a crash by pressing buttons when no model
     is loaded."""
-    self = ManualLandmarkSelection(Palmer.range())
+    self = UI(Palmer.range())
     self.show()
     app.processEvents()
 
     with select_file(None):
         self.open_model()
-    assert self.clicker.stl_path is None
+    assert self.clicker.path is None
 
     self.buttons[0].click()
 
@@ -505,26 +508,26 @@ def test_invalid_model(tmpdir):
 
     # Open an invalid model on startup.
     with CloseBlockingDialog():
-        self = ManualLandmarkSelection(Palmer.range(), invalid)
+        self = UI(Palmer.range(), invalid)
     self.show()
     app.processEvents()
-    assert self.clicker.stl_path == invalid
+    assert self.clicker.path == invalid
     assert self.clicker.mesh is None
-    assert self.clicker.stl_plot is None
+    assert self.clicker.mesh_plot is None
 
     # Via the open model dialog after opening a functional model.
     self._open_model(model)
-    assert self.clicker.stl_path == model
+    assert self.clicker.path == model
     assert np.isfinite(self.clicker.landmarks[1]).sum() == 3 * 14
     with CloseBlockingDialog():
         self._open_model(invalid)
-    assert self.clicker.stl_path == invalid
+    assert self.clicker.path == invalid
     assert self.clicker.mesh is None
     assert len(self.clicker.cursors) == 0
 
     # By switching models via the buttons.
     self.buttons[0].click()
-    assert self.clicker.stl_path == model
+    assert self.clicker.path == model
     with CloseBlockingDialog():
         self.buttons[0].click()
 

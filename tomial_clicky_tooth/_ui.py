@@ -8,7 +8,7 @@ from PyQt5 import QtWidgets, QtCore
 
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv_io
-from tomial_clicky_tooth._clicker import ClickerQtWidget, InvalidModelError
+from tomial_clicky_tooth._clicker import ClickableFigure, InvalidModelError
 from tomial_clicky_tooth._table import LandmarkTable
 
 
@@ -34,8 +34,8 @@ def show_clicker(show_name):
     return show
 
 
-class ManualLandmarkSelection(QtWidgets.QWidget):
-    def __init__(self, landmark_names, stl_path=None, points=None, parent=None):
+class UI(QtWidgets.QWidget):
+    def __init__(self, landmark_names, path=None, points=None, parent=None):
         super().__init__(parent)
 
         self.h_box = QtWidgets.QHBoxLayout()
@@ -50,10 +50,10 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.table = LandmarkTable(landmark_names)
         self.h_box.addWidget(self.table)
         # table button actions
-        self.table.default_save_name = self.save_csv_name
+        self.table.default_csv_name = self.csv_name
 
         ### clicker ###
-        self.clicker_qwidget = ClickerQtWidget(stl_path, self, self.key_gen)
+        self.clicker_qwidget = ClickableFigure(path, self, self.key_generator)
         self.clicker = self.clicker_qwidget
 
         self.right_vbox = QtWidgets.QVBoxLayout()
@@ -129,7 +129,7 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         self.setWindowTitle(path.stem)
         self.clicker.close_stl()
         try:
-            self.clicker.open_stl(path)
+            self.clicker.open_model(path)
         except InvalidModelError:
             self.table.clear_all()
         else:
@@ -145,10 +145,10 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         rows = self.table.highlighted_rows()
         self.clicker.highlight_markers(rows)
 
-    def key_gen(self):
+    def key_generator(self):
         rows = self.table.highlighted_rows()
         if len(rows) == 0:
-            self.table.increment_focus()
+            self.table.increment_selection()
             rows = self.table.highlighted_rows()
         return rows[0]
 
@@ -157,11 +157,11 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
             del self.table[old.key]
         if new is not None:
             self.table[new.key] = new.point
-        self.table.increment_focus()
+        self.table.increment_selection()
 
-    def save_csv_name(self):
-        if self.clicker.stl_path is not None:
-            return SUFFIX_RE.match(self.clicker.stl_path.name)[1] + ".csv"
+    def csv_name(self):
+        if self.clicker.path is not None:
+            return SUFFIX_RE.match(self.clicker.path.name)[1] + ".csv"
         return ""
 
     def get_points(self):
@@ -185,14 +185,14 @@ class ManualLandmarkSelection(QtWidgets.QWidget):
         if self._thread_lock.locked():
             return
         with self._thread_lock:
-            if getattr(self.clicker, "stl_path", None) is None:
+            if getattr(self.clicker, "path", None) is None:
                 return
             paths = [
-                i for i in self.clicker.stl_path.parent.glob("*")
+                i for i in self.clicker.path.parent.glob("*")
                 if SUFFIX_RE.match(i.name)
             ]
             try:
-                index = paths.index(self.clicker.stl_path)
+                index = paths.index(self.clicker.path)
             except ValueError:
                 return
             path = paths[(index + {"<": -1, ">": 1}[direction]) % len(paths)]
@@ -233,7 +233,7 @@ class Interact(QtCore.QThread):  # pragma: no cover
 
 
 def main(names, path=None, points=None, debug=False):
-    self = ManualLandmarkSelection(names, path, points)
+    self = UI(names, path, points)
     if debug:  # pragma: no cover
         t = Interact({**locals(), **globals()})
         t.start()

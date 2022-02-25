@@ -79,7 +79,7 @@ class LandmarkTable(QtWidgets.QWidget):
         self.table.itemChanged.connect(self.table.adjustSize)
         self.table.itemSelectionChanged.connect(self.itemSelectionChanged.emit)
 
-        self.increment_focus()
+        self.increment_selection()
 
     def setup_buttons(self):
         buttons_layout = QtWidgets.QGridLayout()
@@ -115,8 +115,6 @@ class LandmarkTable(QtWidgets.QWidget):
     def load_table_contents(self, names):
         self.table.setRowCount(len(names))
 
-        self.items = np.empty(self.shape, object)
-
         for (i, name) in enumerate(names):
             for j in range(1, len(self.COLUMNS)):
                 self.table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
@@ -134,7 +132,7 @@ class LandmarkTable(QtWidgets.QWidget):
         del self[self.highlighted_rows()]
         self.landmarks_changed.emit(np.array(self))
 
-    def increment_focus(self):
+    def increment_selection(self):
         current_focus = self.highlighted_rows()
         if len(current_focus):
             start = current_focus[0]
@@ -184,7 +182,7 @@ class LandmarkTable(QtWidgets.QWidget):
     def save(self):
         options = dict(
             caption="Save points .csv file",
-            directory=str(self.default_save_name()),
+            directory=str(self.default_csv_name()),
             filter="Basic Spreadsheet (*.csv)",
         )
 
@@ -197,7 +195,7 @@ class LandmarkTable(QtWidgets.QWidget):
         with open(path, "wb") as f:
             f.write(_csv_io.writes(np.array(self), names=self.names).encode())
 
-    def default_save_name(self):  # pragma: no cover
+    def default_csv_name(self):  # pragma: no cover
         return ""
 
     def cut(self):
