@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import runpy
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
