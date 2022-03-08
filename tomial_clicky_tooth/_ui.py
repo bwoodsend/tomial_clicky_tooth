@@ -44,8 +44,6 @@ class UI(QtWidgets.QWidget):
         self.paths = None
         self._thread_lock = threading.Lock()
 
-        self.setWindowTitle("Manual Landmark Selection")
-
         ### table ###
         self.table = LandmarkTable(landmark_names)
         self.h_box.addWidget(self.table)
