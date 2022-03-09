@@ -232,10 +232,10 @@ class UI(QtWidgets.QWidget):
 
         self._licenses = QtWidgets.QWidget()
         self._licenses.setLayout(QtWidgets.QVBoxLayout())
-        self._licenses.layout().addWidget(
-            QtWidgets.QLabel(
-                "Clicky Tooth's own code is just one small cog connecting a network"
-                f"of {len(components) - 1} other open source packages."))
+        self._licenses.layout().addWidget(QtWidgets.QLabel(
+            "Clicky Tooth's own code is just one small cog connecting a "
+            f"network of {len(components) - 1} other open source packages."
+        ))  # yapf: disable
         self._licenses.layout().addWidget(
             lamancha.pyqt5.TermsAndConditions(components.values()))
         lamancha.pyqt5.TermsAndConditions.centerise(self._licenses)
