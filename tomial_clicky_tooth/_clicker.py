@@ -38,7 +38,7 @@ class ClickableFigure(vpl.QtFigure2):
             except InvalidModelError:
                 pass
 
-        self.cursors = {}
+        self.markers = {}
         if key_generator is None:
             key_generator = itertools.count().__next__
         self.key_generator = key_generator
@@ -54,14 +54,14 @@ class ClickableFigure(vpl.QtFigure2):
 
     def left_click_cb(self, pick: vpl.interactive.pick):
         if pick.actor is self.mesh_plot.actor:  # pragma: no branch
-            self.spawn_cursor(pick.point)
+            self.spawn_marker(pick.point)
 
     def right_click_cb(self, pick: vpl.interactive.pick):
         if pick.actor is not None:  # pragma: no branch
-            cursor = self.nearest_cursor(np.array(pick.point))
-            if cursor is not None:
-                self.remove_cursor(cursor.key)
-                self.cursor_changed.emit(cursor, None)
+            marker = self.nearest_marker(np.array(pick.point))
+            if marker is not None:
+                self.remove_marker(marker.key)
+                self.marker_changed.emit(marker, None)
 
     def open_model(self, path):
         self.close_stl()
@@ -102,7 +102,7 @@ class ClickableFigure(vpl.QtFigure2):
         self.reset_camera()
 
     #                                 (old   , new   )
-    cursor_changed = QtCore.pyqtSignal(object, object)
+    marker_changed = QtCore.pyqtSignal(object, object)
 
     def close_stl(self):
         if self.mesh_plot is not None:
@@ -113,63 +113,63 @@ class ClickableFigure(vpl.QtFigure2):
             self.odometry = None
         self.mesh_plot = None
 
-    def nearest_cursor(self, xyz, max_distance=3):
+    def nearest_marker(self, xyz, max_distance=3):
         best = None
         best_distance = max_distance**2
-        for cursor in self.cursors.values():
-            distance = sum((i - j)**2 for (i, j) in zip(cursor.point, xyz))
+        for marker in self.markers.values():
+            distance = sum((i - j)**2 for (i, j) in zip(marker.point, xyz))
             if distance < max_distance and distance < best_distance:
                 best_distance = distance
-                best = cursor
+                best = marker
         return best
 
     @property
     def landmarks(self):
-        keys = np.array(list(self.cursors.keys()), object)
-        return keys, np.array([self.cursors[i].point for i in keys])
+        keys = np.array(list(self.markers.keys()), object)
+        return keys, np.array([self.markers[i].point for i in keys])
 
     @landmarks.setter
     def landmarks(self, landmarks):
         self.clear()
         for (i, j) in zip(*landmarks):
             if j is not None and np.isfinite(j).all():
-                self._spawn_cursor(j, i)
+                self._spawn_marker(j, i)
         self.update()
 
-    def remove_cursor(self, key):
-        cursor = self.cursors.pop(key)
-        self -= cursor
-        return cursor
+    def remove_marker(self, key):
+        marker = self.markers.pop(key)
+        self -= marker
+        return marker
 
     def clear(self):
-        for key in list(self.cursors):
-            self.remove_cursor(key)
+        for key in list(self.markers):
+            self.remove_marker(key)
 
-    def _spawn_cursor(self, xyz, key=None):
+    def _spawn_marker(self, xyz, key=None):
         if key is None:
             key = self.key_generator()
-        if key in self.cursors:
-            self.remove_cursor(key)
+        if key in self.markers:
+            self.remove_marker(key)
 
-        cursor = vpl.scatter(xyz, color=Colors.MARKER, fig=self,
+        marker = vpl.scatter(xyz, color=Colors.MARKER, fig=self,
                              use_cursors=True)
-        cursor.key = key
+        marker.key = key
 
-        self.cursors[cursor.key] = cursor
-        return cursor
+        self.markers[marker.key] = marker
+        return marker
 
-    def spawn_cursor(self, point, key=None):
-        cursor = self._spawn_cursor(point, key)
-        self.cursor_changed.emit(None, cursor)
+    def spawn_marker(self, point, key=None):
+        marker = self._spawn_marker(point, key)
+        self.marker_changed.emit(None, marker)
 
     def highlight_markers(self, marker_indices):
         marker_indices = set(marker_indices)
-        for cursor in self.cursors.values():
+        for marker in self.markers.values():
 
-            if cursor.key in marker_indices:
+            if marker.key in marker_indices:
                 color = Colors.HIGHLIGHTED
             else:
                 color = Colors.MARKER
 
-            cursor.color = color
+            marker.color = color
         self.update()

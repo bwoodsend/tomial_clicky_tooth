@@ -116,50 +116,50 @@ def test_clicking():
     click(self, points[0])
     assert self.table.highlighted_rows() == [1]
     assert np.allclose(self.table[0], points[0], atol=1)
-    assert np.allclose(self.clicker.cursors[0].point, points[0], atol=1)
+    assert np.allclose(self.clicker.markers[0].point, points[0], atol=1)
 
     highlight(self.clicker.mesh_plot, points[1])
     click(self, points[1])
     assert self.table.highlighted_rows() == [2]
     assert np.allclose(self.table[1], points[1], atol=1)
-    assert np.allclose(self.clicker.cursors[1].point, points[1], atol=1)
+    assert np.allclose(self.clicker.markers[1].point, points[1], atol=1)
 
     highlight(self.clicker.mesh_plot, points[3])
     select_rows(self, 3)
     click(self, points[3])
     assert self.table.highlighted_rows() == [3]
     assert np.allclose(self.table[3], points[3], atol=1)
-    assert np.allclose(self.clicker.cursors[3].point, points[3], atol=1)
+    assert np.allclose(self.clicker.markers[3].point, points[3], atol=1)
 
     highlight(self.clicker.mesh_plot, points[4])
     click(self, points[4])
     assert self.table.highlighted_rows() == [3]
     assert np.allclose(self.table[3], points[4], atol=1)
-    assert np.allclose(self.clicker.cursors[3].point, points[4], atol=1)
+    assert np.allclose(self.clicker.markers[3].point, points[4], atol=1)
 
     select_rows(self)
     highlight(self.clicker.mesh_plot, points[5])
     click(self, points[5])
     assert self.table.highlighted_rows() == [2]
     assert np.allclose(self.table[2], points[5], atol=1)
-    assert np.allclose(self.clicker.cursors[2].point, points[5], atol=1)
+    assert np.allclose(self.clicker.markers[2].point, points[5], atol=1)
 
     self.clicker.mesh_plot.scalars = None
 
     click(self, points[5], button="R")
-    assert sorted(self.clicker.cursors.keys()) == [0, 1, 3]
+    assert sorted(self.clicker.markers.keys()) == [0, 1, 3]
     click(self, points[4], button="R")
-    assert sorted(self.clicker.cursors.keys()) == [0, 1]
+    assert sorted(self.clicker.markers.keys()) == [0, 1]
     click(self, points[0], button="R")
-    assert sorted(self.clicker.cursors.keys()) == [1]
+    assert sorted(self.clicker.markers.keys()) == [1]
     click(self, points[0], button="R")
-    assert sorted(self.clicker.cursors.keys()) == [1]
+    assert sorted(self.clicker.markers.keys()) == [1]
 
     # Clicking on empty space should do nothing.
     click_2d(self, 10, 10)
-    assert sorted(self.clicker.cursors.keys()) == [1]
+    assert sorted(self.clicker.markers.keys()) == [1]
     click_2d(self, 10, 10, button="R")
-    assert sorted(self.clicker.cursors.keys()) == [1]
+    assert sorted(self.clicker.markers.keys()) == [1]
 
     self.close()
 
@@ -174,21 +174,21 @@ def test_highlight():
         tips(self.clicker.mesh, self.clicker.odometry.occlusal))
     self.set_points(points)
 
-    assert self.clicker.cursors[0].color == (.9, 0, 0)
-    assert self.clicker.cursors[1].color == (0, 0, 0)
+    assert self.clicker.markers[0].color == (.9, 0, 0)
+    assert self.clicker.markers[1].color == (0, 0, 0)
     select_rows(self, 0)
-    assert self.clicker.cursors[0].color == (.9, 0, 0)
-    assert self.clicker.cursors[1].color == (0, 0, 0)
+    assert self.clicker.markers[0].color == (.9, 0, 0)
+    assert self.clicker.markers[1].color == (0, 0, 0)
     select_rows(self, 1)
-    assert self.clicker.cursors[0].color == (0, 0, 0)
-    assert self.clicker.cursors[1].color == (.9, 0, 0)
+    assert self.clicker.markers[0].color == (0, 0, 0)
+    assert self.clicker.markers[1].color == (.9, 0, 0)
     select_rows(self, 2)
-    assert self.clicker.cursors[0].color == (0, 0, 0)
-    assert self.clicker.cursors[1].color == (0, 0, 0)
+    assert self.clicker.markers[0].color == (0, 0, 0)
+    assert self.clicker.markers[1].color == (0, 0, 0)
 
     select_rows(self, 0, 2, 1)
-    assert self.clicker.cursors[0].color == (.9, 0, 0)
-    assert self.clicker.cursors[1].color == (.9, 0, 0)
+    assert self.clicker.markers[0].color == (.9, 0, 0)
+    assert self.clicker.markers[1].color == (.9, 0, 0)
 
     self.close()
 
@@ -205,15 +205,15 @@ def test_delete():
     select_rows(self, 0, 1, 2)
     self.table.delete_button.click()
     for i in range(3):
-        assert i not in self.clicker.cursors
+        assert i not in self.clicker.markers
     for i in range(3, 8):
-        assert self.clicker.cursors[i]
+        assert self.clicker.markers[i]
     assert self.table[:3] == [None] * 3
     assert (self.table[3:] == points[3:]).all()
 
     self.table.clear_all_button.click()
     assert self.table[:] == [None] * 8
-    assert self.clicker.cursors == {}
+    assert self.clicker.markers == {}
     assert len(self.clicker.plots) == 1
 
     self.close()
@@ -262,7 +262,7 @@ def test_table_layout(long_names, show):
     # the coordinates.
     old_size = self.table.size()
     for point in self.clicker.mesh.vectors[[1000, 20000], 0]:
-        self.clicker.spawn_cursor(point)
+        self.clicker.spawn_marker(point)
     app.processEvents()
     assert self.table.width() > old_size.width()
     assert self.table.height() == old_size.height()
@@ -281,7 +281,7 @@ def test_paste():
     pyperclip.copy("123\t456\t789")
     self.table.paste_button.click()
     assert self.table[0] == (123, 456, 789)
-    assert self.clicker.cursors[0].point == (123, 456, 789)
+    assert self.clicker.markers[0].point == (123, 456, 789)
 
     # Populate the table.
     points = np.c_[np.arange(5) * 4, np.random.random(5), np.random.random(5)]
@@ -304,30 +304,30 @@ def test_paste():
     pyperclip.copy("0,0,0\n")
     self.table.paste()
     assert self.table[3] == (0, 0, 0)
-    assert np.all(self.clicker.cursors[4].point == points[4])
+    assert np.all(self.clicker.markers[4].point == points[4])
 
     # Paste overwriting all values, including replacing points with blanks.
     pyperclip.copy(",,\r\n1, .5, .3\r\n,,\r\n3,.2,.6\r\n,,")
     self.table.table.selectRow(0)
     self.table.paste()
-    assert len(self.clicker.cursors) == 2
-    assert self.clicker.cursors[1].point == (1, .5, .3)
-    assert self.clicker.cursors[3].point == (3, .2, .6)
+    assert len(self.clicker.markers) == 2
+    assert self.clicker.markers[1].point == (1, .5, .3)
+    assert self.clicker.markers[3].point == (3, .2, .6)
 
     # Paste starting from the middle of the table so that the last two values in
     # the clipboard don't fit into the table and should be discarded.
     self.table.table.selectRow(2)
     self.table.paste()
-    assert len(self.clicker.cursors) == 2
-    assert self.clicker.cursors[1].point == (1, .5, .3)
-    assert self.clicker.cursors[3].point == (1, .5, .3)
+    assert len(self.clicker.markers) == 2
+    assert self.clicker.markers[1].point == (1, .5, .3)
+    assert self.clicker.markers[3].point == (1, .5, .3)
 
     # With nothing selected, paste starting from the top.
     select_rows(self)
     self.table.paste()
-    assert len(self.clicker.cursors) == 2
-    assert self.clicker.cursors[1].point == (1, .5, .3)
-    assert self.clicker.cursors[3].point == (3, .2, .6)
+    assert len(self.clicker.markers) == 2
+    assert self.clicker.markers[1].point == (1, .5, .3)
+    assert self.clicker.markers[3].point == (3, .2, .6)
 
     self.close()
 
@@ -351,7 +351,7 @@ def test_copy():
     select_rows(self, 0, 2)
     self.table.cut_button.click()
     assert pyperclip.paste() == "0.0\t0.0\t1.0\n10.0\t0.0\t1.0"
-    assert sorted(self.clicker.cursors) == [1, 3, 4]
+    assert sorted(self.clicker.markers) == [1, 3, 4]
 
     self.close()
 
@@ -448,9 +448,9 @@ def test_model_switching():
         shutil.copy(Path(__file__).with_name("1L.csv"), root)
         while not self.clicker.path.name.startswith("1L"):
             self.switch_model(">")
-        assert len(self.clicker.cursors) == 14
+        assert len(self.clicker.markers) == 14
         self.switch_model(">")
-        assert len(self.clicker.cursors) == 0
+        assert len(self.clicker.markers) == 0
 
         # Without appropriate thread control, the UI will crash if the user
         # holds either left or right keys for around >30 seconds.
@@ -523,7 +523,7 @@ def test_invalid_model(tmpdir):
         self._open_model(invalid)
     assert self.clicker.path == invalid
     assert self.clicker.mesh is None
-    assert len(self.clicker.cursors) == 0
+    assert len(self.clicker.markers) == 0
 
     # By switching models via the buttons.
     self.buttons[0].click()

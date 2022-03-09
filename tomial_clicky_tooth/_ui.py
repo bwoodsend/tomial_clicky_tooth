@@ -78,7 +78,7 @@ class UI(QtWidgets.QWidget):
         self.table.landmarks_changed.connect(self.set_clicker_points)
 
         # clicker actions to control table
-        self.clicker.cursor_changed.connect(self.cursor_changed_by_clicker_cb)
+        self.clicker.marker_changed.connect(self.marker_changed_by_clicker_cb)
 
         self.menu_bar = self.setup_menu_bar()
 
@@ -155,7 +155,7 @@ class UI(QtWidgets.QWidget):
             rows = self.table.highlighted_rows()
         return rows[0]
 
-    def cursor_changed_by_clicker_cb(self, old, new):
+    def marker_changed_by_clicker_cb(self, old, new):
         if old is not None:
             del self.table[old.key]
         if new is not None:
