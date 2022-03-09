@@ -27,6 +27,7 @@ setup(
         "pangolin @ git+ssh://git@github.com/bwoodsend/pangolin.git@5ac604917ef59db3ef020894835249658fea2510",
         "pyperclip",
         "vtkplotlib >= 1.5.1",
+        "lamancha @ git+ssh://git@github.com/bwoodsend/lamancha.git@c691c3f0a138c736eeab0805315fc3f268700352",
     ],
     extras_require={
         "test": [

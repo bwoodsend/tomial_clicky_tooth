@@ -532,3 +532,12 @@ def test_invalid_model(tmpdir):
         self.buttons[0].click()
 
     self.close()
+
+
+def test_show_licenses():
+    self = UI(Palmer.range())
+    self.show()
+    app.processEvents()
+
+    self.show_licenses()
+    assert self._licenses.isVisible()

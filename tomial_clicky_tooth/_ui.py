@@ -108,6 +108,11 @@ class UI(QtWidgets.QWidget):
         clear_markers_action.triggered.connect(self.table.clear_all)
         edit_menu.addAction(clear_markers_action)
 
+        help_menu = menu_bar.addMenu("&About")
+        license_action = QtWidgets.QAction("Terms And Conditions", self)
+        license_action.triggered.connect(self.show_licenses)
+        help_menu.addAction(license_action)
+
         menu_bar.adjustSize()
 
         return menu_bar
@@ -209,6 +214,32 @@ class UI(QtWidgets.QWidget):
 
     def closeEvent(self, event):
         self.clicker.closeEvent(event)
+
+    def show_licenses(self):
+        """Open a licenses viewer window."""
+
+        import pkg_resources
+        import lamancha.pyqt5
+
+        components = {"python": lamancha.python}
+        for distribution in pkg_resources.require("tomial_clicky_tooth"):
+            try:
+                component = lamancha.Distribution(distribution)
+            except (lamancha.exceptions.NoLicense,
+                    lamancha.exceptions.FrozenEditable):
+                continue
+            components[component.name] = component
+
+        self._licenses = QtWidgets.QWidget()
+        self._licenses.setLayout(QtWidgets.QVBoxLayout())
+        self._licenses.layout().addWidget(
+            QtWidgets.QLabel(
+                "Clicky Tooth's own code is just one small cog connecting a network"
+                f"of {len(components) - 1} other open source packages."))
+        self._licenses.layout().addWidget(
+            lamancha.pyqt5.TermsAndConditions(components.values()))
+        lamancha.pyqt5.TermsAndConditions.centerise(self._licenses)
+        self._licenses.show()
 
 
 SUFFIXES = [".stl", ".stl.gz", ".stl.bz2", ".stl.xz"]
