@@ -51,7 +51,7 @@ class UI(QtWidgets.QWidget):
         self.table.default_csv_name = self.csv_name
 
         ### clicker ###
-        self.clicker_qwidget = ClickableFigure(path, self, self.key_generator)
+        self.clicker_qwidget = ClickableFigure(key_generator=self.key_generator)
         self.clicker = self.clicker_qwidget
 
         self.right_vbox = QtWidgets.QVBoxLayout()
@@ -85,6 +85,7 @@ class UI(QtWidgets.QWidget):
         # optionally start with some landmarks already picked
         if points is not None:
             self.set_points(points)
+        self._open_model(path)
 
     show = show_clicker("show")
     showMaximized = show_clicker("showMaximized")
@@ -130,7 +131,7 @@ class UI(QtWidgets.QWidget):
             return
         path = Path(path)
         self.setWindowTitle(path.stem)
-        self.clicker.close_stl()
+        self.clicker.close_model()
         try:
             self.clicker.open_model(path)
         except InvalidModelError:
@@ -146,7 +147,7 @@ class UI(QtWidgets.QWidget):
     def table_selection_changed_cb(self):
         """Highlights the markers on the model that are selected in the table"""
         rows = self.table.highlighted_rows()
-        self.clicker.highlight_markers(rows)
+        self.clicker.highlight(rows)
 
     def key_generator(self):
         rows = self.table.highlighted_rows()
