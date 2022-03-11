@@ -135,13 +135,13 @@ class UI(QtWidgets.QWidget):
         try:
             self.clicker.open_model(path)
         except InvalidModelError:
-            self.table.clear_all()
+            del self.points
         else:
             csv_path = path.with_name(SUFFIX_RE.sub(r"\1.csv", path.name))
             if csv_path.exists():
                 self.points = csv_path
             else:
-                self.table.clear_all()
+                del self.points
         self.clicker.update()
 
     def table_selection_changed_cb(self):
@@ -179,6 +179,12 @@ class UI(QtWidgets.QWidget):
 
         self.set_clicker_points(points)
         self.table[:] = points
+
+    @points.deleter
+    def points(self):
+        self.clicker.clear()
+        del self.table[:]
+        self.clicker.update()
 
     def set_clicker_points(self, points):
         self.clicker.landmarks = np.arange(len(points)), points
