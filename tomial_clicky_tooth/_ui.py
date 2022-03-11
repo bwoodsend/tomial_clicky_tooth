@@ -84,7 +84,7 @@ class UI(QtWidgets.QWidget):
 
         # optionally start with some landmarks already picked
         if points is not None:
-            self.set_points(points)
+            self.points = points
         self._open_model(path)
 
     show = show_clicker("show")
@@ -139,7 +139,7 @@ class UI(QtWidgets.QWidget):
         else:
             csv_path = path.with_name(SUFFIX_RE.sub(r"\1.csv", path.name))
             if csv_path.exists():
-                self.set_points(csv_path)
+                self.points = csv_path
             else:
                 self.table.clear_all()
         self.clicker.update()
@@ -168,19 +168,21 @@ class UI(QtWidgets.QWidget):
             return SUFFIX_RE.match(self.clicker.path.name)[1] + ".csv"
         return ""
 
-    def get_points(self):
+    @property
+    def points(self):
         return np.array(self.table)
 
-    def set_clicker_points(self, points):
-        self.clicker.landmarks = np.arange(len(points)), points
-        self.table_selection_changed_cb()
-
-    def set_points(self, points):
+    @points.setter
+    def points(self, points):
         if isinstance(points, (str, os.PathLike)):
             points = _csv_io.read(points)
 
         self.set_clicker_points(points)
         self.table[:] = points
+
+    def set_clicker_points(self, points):
+        self.clicker.landmarks = np.arange(len(points)), points
+        self.table_selection_changed_cb()
 
     def switch_model(self, direction):
         # This function needs a lock to be made thread safe but shouldn't

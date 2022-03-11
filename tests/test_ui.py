@@ -172,7 +172,7 @@ def test_highlight():
     self.show()
     points = remove_close(
         tips(self.clicker.mesh, self.clicker.odometry.occlusal))
-    self.set_points(points)
+    self.points = points
 
     assert self.clicker.markers[0].color == (.9, 0, 0)
     assert self.clicker.markers[1].color == (0, 0, 0)
@@ -200,7 +200,7 @@ def test_delete():
     self.show()
     points = remove_close(
         tips(self.clicker.mesh, self.clicker.odometry.occlusal))
-    self.set_points(points)
+    self.points = points
 
     select_rows(self, 0, 1, 2)
     self.table.delete_button.click()
@@ -285,10 +285,10 @@ def test_paste():
 
     # Populate the table.
     points = np.c_[np.arange(5) * 4, np.random.random(5), np.random.random(5)]
-    self.set_points(points)
+    self.points = points
     self.clicker.reset_camera()
     self.clicker.update()
-    assert np.all(self.get_points() == points)
+    assert np.all(self.points == points)
 
     # Test that various invalid CSVs don't write to the table before realising
     # that they are invalid.
@@ -296,7 +296,7 @@ def test_paste():
         assert _csv_io.parse_points(text) is None
         pyperclip.copy(text)
         self.table.paste_button.click()
-        assert np.all(self.get_points() == points)
+        assert np.all(self.points == points)
 
     # Ensure that trailing newlines don't cause the next point to be overwritten
     # with a blank.
@@ -375,7 +375,7 @@ def test_save():
         _test_write("foo.csv")
         with select_file(tomial_tooth_collection_api.model("1L")):
             self.open_model()
-        self.set_points(points)
+        self.points = points
         assert self.table.default_csv_name() == "1L.csv"
         _test_write("1L.csv")
 
@@ -462,11 +462,11 @@ def test_model_switching():
     # Verify that nothing happens if the STL is deleted.
     assert not self.clicker.path.exists()
     old_points = np.arange(12).reshape((4, 3))
-    self.set_points(old_points)
+    self.points = old_points
     old_stl_plot = self.clicker.mesh_plot
     self.buttons[0].click()
     assert self.clicker.mesh_plot is old_stl_plot
-    assert np.array_equal(self.get_points()[:4], old_points)
+    assert np.array_equal(self.points[:4], old_points)
 
     self.close()
 
@@ -487,7 +487,7 @@ def test_no_model_open():
     with select_file(None):
         self.table.save()
 
-    self.set_points([[1, 2, 3]])
+    self.points = [[1, 2, 3]]
     read, write = os.pipe()
     self.table._save(write)
     with open(read, "rb") as f:
