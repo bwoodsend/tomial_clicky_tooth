@@ -1,10 +1,11 @@
+import collections
 import os
 import re
 import threading
 from pathlib import Path
 
 import numpy as np
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv_io
@@ -76,15 +77,18 @@ class UI(QtWidgets.QWidget):
         # table actions to control the clicker
         self.table.itemSelectionChanged.connect(self.table_selection_changed_cb)
         self.table.landmarks_changed.connect(self.set_clicker_points)
+        self.table.landmarks_changed.connect(self._log_state)
 
         # clicker actions to control table
         self.clicker.marker_changed.connect(self.marker_changed_by_clicker_cb)
+        self.clicker.marker_changed.connect(self._log_state)
 
         self.menu_bar = self.setup_menu_bar()
 
         # optionally start with some landmarks already picked
         if points is not None:
             self.points = points
+        self._history = History(self.points)
         self._open_model(path)
 
     show = show_clicker("show")
@@ -108,6 +112,16 @@ class UI(QtWidgets.QWidget):
         clear_markers_action = QtWidgets.QAction("Clear markers", self)
         clear_markers_action.triggered.connect(self.table.clear_all)
         edit_menu.addAction(clear_markers_action)
+
+        undo = QtWidgets.QAction("Undo", self, triggered=self.undo)
+        undo.setShortcut(QtGui.QKeySequence.Undo)
+        edit_menu.addAction(undo)
+
+        for sequence in ("Ctrl+Y", "Shift+Ctrl+Z"):
+            redo = QtWidgets.QAction("Redo", self, triggered=self.redo)
+            redo.setShortcut(QtGui.QKeySequence(sequence))
+            self.addAction(redo)
+        edit_menu.addAction(redo)
 
         help_menu = menu_bar.addMenu("&About")
         license_action = QtWidgets.QAction("Terms And Conditions", self)
@@ -142,6 +156,7 @@ class UI(QtWidgets.QWidget):
                 self.points = csv_path
             else:
                 del self.points
+        self._history = History(self.points)
         self.clicker.update()
 
     def table_selection_changed_cb(self):
@@ -250,9 +265,40 @@ class UI(QtWidgets.QWidget):
         lamancha.pyqt5.TermsAndConditions.centerise(self._licenses)
         self._licenses.show()
 
+    def _log_state(self, *_):
+        """Record the current landmark positions for undo/redo."""
+        with self._thread_lock:
+            self._history.position += 1
+            # If the user has just pressed undo then overwrite (by removing) the
+            # undone states.
+            while self._history.position < len(self._history):
+                self._history.pop()
+            self._history.append(self.points)
+
+    def undo(self):
+        """Undo a change made via user interaction."""
+        with self._thread_lock:
+            if self._history.position > 0:
+                self._history.position -= 1
+                self.points = self._history[self._history.position]
+
+    def redo(self):
+        """Reapply a change reverted by undo()."""
+        with self._thread_lock:
+            if self._history.position < len(self._history) - 1:
+                self._history.position += 1
+                self.points = self._history[self._history.position]
+
 
 SUFFIXES = [".stl", ".stl.gz", ".stl.bz2", ".stl.xz"]
 SUFFIX_RE = re.compile("(.*)(" + "|".join(map(re.escape, SUFFIXES)) + ")$")
+
+
+class History(collections.deque):
+    """A state history for undo/redo operations."""
+    def __init__(self, state):
+        self.position = 0
+        super().__init__([state])
 
 
 class Interact(QtCore.QThread):  # pragma: no cover

@@ -541,3 +541,53 @@ def test_show_licenses():
 
     self.show_licenses()
     assert self._licenses.isVisible()
+
+
+def test_history(tmpdir):
+    """Test undo/redo."""
+    self = UI(Palmer.range())
+    self.show()
+    app.processEvents()
+
+    assert len(self._history) == 1
+    assert self._history.position == 0
+    assert np.isnan(self._history[0]).all()
+
+    files = [
+        Path(shutil.copy(tomial_tooth_collection_api.model(name), tmpdir))
+        for name in ["1L", "1U"]
+    ]
+
+    old_history = self._history
+    self._open_model(files[0])
+    assert self._history is not old_history
+    assert len(self._history) == 1
+    assert self._history.position == 0
+    assert np.isnan(self._history[0]).all()
+
+    pyperclip.copy("1\t2\t3\n4\t5\t6")
+    self.table.paste_button.click()
+    assert len(self._history) == 2
+    assert self._history.position == 1
+    assert np.array_equal(self.points[:2], self._history[1][:2])
+
+    self.undo()
+    assert len(self._history) == 2
+    assert np.isnan(self.points).all()
+    self.undo()
+    assert len(self._history) == 2
+    assert np.isnan(self.points).all()
+
+    self.clicker.spawn_marker((7, 8, 9))
+    self.clicker.spawn_marker((10, 11, 12))
+    assert len(self._history) == 3
+
+    self.undo()
+    self.clicker.spawn_marker((10, 11, 12))
+    assert len(self._history) == 3
+
+    self.undo()
+    self.redo()
+    assert sorted(self.clicker.markers) == [0, 2]
+    self.redo()
+    assert sorted(self.clicker.markers) == [0, 2]
