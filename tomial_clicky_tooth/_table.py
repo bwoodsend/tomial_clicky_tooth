@@ -114,12 +114,15 @@ class LandmarkTable(QtWidgets.QWidget):
 
     def load_table_contents(self, names):
         self.table.setRowCount(len(names))
-
+        flags = QtCore.Qt.ItemFlags(QtCore.Qt.ItemFlag.ItemIsSelectable +
+                                    QtCore.Qt.ItemFlag.ItemIsEnabled)
         for (i, name) in enumerate(names):
             for j in range(1, len(self.COLUMNS)):
                 self.table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
+                self.table.item(i, j).setFlags(flags)
 
             cell = QtWidgets.QTableWidgetItem("\n".join(wrap(str(name), 40)))
+            cell.setFlags(flags)
             self.table.setItem(i, 0, cell)
 
         self.table.adjustSize()
