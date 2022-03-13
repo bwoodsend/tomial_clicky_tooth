@@ -301,27 +301,8 @@ class History(collections.deque):
         super().__init__([state])
 
 
-class Interact(QtCore.QThread):  # pragma: no cover
-    def __init__(self, namespace):
-        self.namespace = namespace
-        super().__init__()
-
-    def run(self):
-        import code
-        import readline
-        import rlcompleter
-
-        readline.set_completer(rlcompleter.Completer(self.namespace).complete)
-        readline.parse_and_bind("tab: complete")
-        code.InteractiveConsole(self.namespace).interact()
-
-
-def main(names, path=None, points=None, debug=False):
+def main(names, path=None, points=None):
     self = UI(names, path, points)
-    if debug:  # pragma: no cover
-        t = Interact({**locals(), **globals()})
-        t.start()
     self.show()
     app.exec()
-
     return self

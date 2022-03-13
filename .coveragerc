@@ -14,3 +14,4 @@ exclude_lines =
 ignore_errors = True
 omit =
     */__main__.py
+    tomial_clicky_tooth/_debug.py
