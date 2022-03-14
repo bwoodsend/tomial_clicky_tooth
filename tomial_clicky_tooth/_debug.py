@@ -1,6 +1,7 @@
 import sys
 
 from pangolin import Palmer
+import ptpython
 
 from tomial_clicky_tooth._ui import *
 
@@ -11,13 +12,7 @@ class Interact(QtCore.QThread):  # pragma: no cover
         super().__init__()
 
     def run(self):
-        import code
-        import readline
-        import rlcompleter
-
-        readline.set_completer(rlcompleter.Completer(self.namespace).complete)
-        readline.parse_and_bind("tab: complete")
-        code.InteractiveConsole(self.namespace).interact()
+        ptpython.embed(self.namespace)
 
 
 def debug(names, path=None, points=None):
