@@ -42,7 +42,6 @@ class UI(QtWidgets.QWidget):
         self.h_box = QtWidgets.QHBoxLayout()
         self.setLayout(self.h_box)
 
-        self.paths = None
         self._thread_lock = threading.Lock()
 
         ### table ###
@@ -205,6 +204,41 @@ class UI(QtWidgets.QWidget):
         self.clicker.landmarks = np.arange(len(points)), points
         self.table_selection_changed_cb()
 
+    def files_index(self):
+        """List models to process (including those already processed) and the
+        index of the model currently open.
+
+        Returns:
+            paths:
+                A file path for each model.
+            index:
+                The index of the currently opened model.
+
+        This method is intended to be overridable in subclasses. It's default
+        behaviour is to iterate through the directory the currently open model
+        is stored in.
+
+        If no model is open or the currently open model has disappeared from the
+        filesystem, then return a pair of nones.
+
+        """
+        if self.path is None:
+            return None, None
+        paths = [
+            i for i in self.clicker.path.parent.glob("*")
+            if SUFFIX_RE.match(i.name)
+        ]
+        try:
+            index = paths.index(self.clicker.path)
+        except ValueError:
+            return None, None
+        return paths, index
+
+    @property
+    def path(self):
+        """The filename of the currently opened model."""
+        return self.clicker.path
+
     def switch_model(self, direction):
         # This function needs a lock to be made thread safe but shouldn't
         # allow events to queue up if the user holds down one of the arrow
@@ -212,15 +246,8 @@ class UI(QtWidgets.QWidget):
         if self._thread_lock.locked():
             return
         with self._thread_lock:
-            if getattr(self.clicker, "path", None) is None:
-                return
-            paths = [
-                i for i in self.clicker.path.parent.glob("*")
-                if SUFFIX_RE.match(i.name)
-            ]
-            try:
-                index = paths.index(self.clicker.path)
-            except ValueError:
+            paths, index = self.files_index()
+            if paths is None:
                 return
             path = paths[(index + {"<": -1, ">": 1}[direction]) % len(paths)]
             self._open_model(path)

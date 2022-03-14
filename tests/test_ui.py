@@ -471,6 +471,26 @@ def test_model_switching():
     self.close()
 
 
+def test_custom_files_index(tmpdir):
+    """Test a custom implementation of UI.files_index() which iterates over a
+    predefined set of files instead of over a directory."""
+    files = [
+        Path(shutil.copy(tomial_tooth_collection_api.model("1L"), tmpdir)),
+        tomial_tooth_collection_api.model("2L"),
+    ]
+
+    class CustomFileList(UI):
+        def files_index(self):
+            return files, files.index(self.path)
+
+    self = CustomFileList(Palmer.range(), files[0])
+    assert self.path == files[0]
+    self.switch_model(">")
+    assert self.path == files[1]
+    self.switch_model(">")
+    assert self.path == files[0]
+
+
 def test_no_model_open():
     """Make sure that we can't cause a crash by pressing buttons when no model
     is loaded."""
