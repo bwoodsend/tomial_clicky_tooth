@@ -484,6 +484,8 @@ def test_custom_files_index(tmpdir):
             return files, files.index(self.path)
 
     self = CustomFileList(Palmer.range(), files[0])
+    self.show()
+
     assert self.path == files[0]
     self.switch_model(">")
     assert self.path == files[1]

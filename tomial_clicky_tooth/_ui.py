@@ -30,7 +30,7 @@ def show_clicker(show_name):
     addition to QWidget.show()."""
     def show(self):
         self.clicker.show()
-        getattr(super(type(self), self), show_name)()
+        getattr(QtWidgets.QWidget, show_name)(self)
 
     return show
 
