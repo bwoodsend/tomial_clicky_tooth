@@ -90,6 +90,15 @@ jobs:
           xvfb-run -s '-screen 0, 1280x720x24' pytest --screenshot-on-fail
           xvfb-run -s '-screen 0, 640x480x24' pytest --screenshot-on-fail
 
+      - name: Test non-editable install
+        if: ${{ matrix.os == 'ubuntu' }}
+        run: |
+          pip uninstall -y tomial_clicky_tooth
+          git clean -xfdq
+          pip install .
+          rm -r tomial_clicky_tooth
+          pytest --no-cov --screenshot-on-fail
+
       - if: failure()
         uses: actions/upload-artifact@v2
         with:
