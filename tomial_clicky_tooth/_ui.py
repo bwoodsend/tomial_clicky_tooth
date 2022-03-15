@@ -66,9 +66,14 @@ class UI(QtWidgets.QWidget):
         hbox.addStretch()
         for i in "<>":
             button = SwitchModelButton(i)
-            hbox.addWidget(button)
             button.callback = self.switch_model
             self.buttons.append(button)
+        self.model_name_indicator = QtWidgets.QLabel()
+        self.model_number_indicator = QtWidgets.QLabel()
+        hbox.addWidget(self.buttons[0])
+        hbox.addWidget(self.model_name_indicator)
+        hbox.addWidget(self.model_number_indicator)
+        hbox.addWidget(self.buttons[1])
         hbox.addStretch()
 
         ### tie them together ###
@@ -143,7 +148,6 @@ class UI(QtWidgets.QWidget):
         if not path:
             return
         path = Path(path)
-        self.setWindowTitle(path.stem)
         self.clicker.close_model()
         try:
             self.clicker.open_model(path)
@@ -155,6 +159,14 @@ class UI(QtWidgets.QWidget):
                 self.points = csv_path
             else:
                 del self.points
+
+        self.model_name_indicator.setText(SUFFIX_RE.match(path.name)[1])
+        files, index = self.files_index()
+        if index is not None:
+            self.model_number_indicator.setText(f"({index + 1}/{len(files)})")
+        else:
+            self.model_number_indicator.setText("")
+
         self._history = History(self.points)
         self.clicker.update()
 

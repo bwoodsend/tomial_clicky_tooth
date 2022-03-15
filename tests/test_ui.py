@@ -481,16 +481,32 @@ def test_custom_files_index(tmpdir):
 
     class CustomFileList(UI):
         def files_index(self):
-            return files, files.index(self.path)
+            try:
+                return files, files.index(self.path)
+            except ValueError:
+                return None, None
 
     self = CustomFileList(Palmer.range(), files[0])
     self.show()
 
     assert self.path == files[0]
+    assert self.model_name_indicator.text() == "1L"
+    assert self.model_number_indicator.text() == "(1/2)"
+
     self.switch_model(">")
     assert self.path == files[1]
+    assert self.model_name_indicator.text() == "2L"
+    assert self.model_number_indicator.text() == "(2/2)"
+
     self.switch_model(">")
     assert self.path == files[0]
+    assert self.model_name_indicator.text() == "1L"
+    assert self.model_number_indicator.text() == "(1/2)"
+
+    self._open_model(tomial_tooth_collection_api.model("2U"))
+    assert self.path == tomial_tooth_collection_api.model("2U")
+    assert self.model_name_indicator.text() == "2U"
+    assert self.model_number_indicator.text() == ""
 
 
 def test_no_model_open():
