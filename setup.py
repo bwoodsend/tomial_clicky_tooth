@@ -41,6 +41,10 @@ setup(
             "tomial_tooth_collection_api @ git+ssh://git@github.com/bwoodsend/tomial_tooth_collection_api.git@0bd1fe8b9b82558712b38ce276a3633c7600bad5",
         ]
     },
+    entry_points={
+        "pyinstaller40": "hook-dirs=tomial_clicky_tooth:_PyInstaller_hook_dir",
+    },
+    include_package_data=True,
     license="BSD license",
     long_description=readme,
     name='tomial-clicky-tooth',
