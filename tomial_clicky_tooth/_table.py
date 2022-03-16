@@ -25,7 +25,12 @@ class _QTable(QtWidgets.QTableWidget):
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         width = self.verticalHeader().width() + 2
-        if self.verticalScrollBar().isVisible():
+        # If the table is long enough to need a vertical scroll bar then add its
+        # width as well. Note that a simple self.verticalScrollBar().isVisible()
+        # gets into a tangle on macOS because it auto-hides the scroll bar if it
+        # sits still for more than a few seconds.
+        if self.viewportSizeHint().height() \
+            > self.viewport().height() + self.horizontalHeader().height():
             width += self.verticalScrollBar().sizeHint().width()
         for i in range(self.columnCount()):
             width += self.columnWidth(i)
