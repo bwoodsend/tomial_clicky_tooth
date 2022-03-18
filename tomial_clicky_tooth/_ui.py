@@ -39,6 +39,8 @@ class UI(QtWidgets.QWidget):
     def __init__(self, landmark_names, path=None, points=None, parent=None):
         super().__init__(parent)
 
+        self.setWindowTitle(app.applicationName() + " [*]")
+
         self.h_box = QtWidgets.QHBoxLayout()
         self.setLayout(self.h_box)
 
@@ -312,7 +314,10 @@ class UI(QtWidgets.QWidget):
             # undone states.
             while self._history.position < len(self._history):
                 self._history.pop()
+            if self._history.saved_position >= len(self._history):
+                self._history.saved_position = -1
             self._history.append(self.points)
+            self.setWindowModified(self._history.modified)
 
     def undo(self):
         """Undo a change made via user interaction."""
@@ -320,6 +325,7 @@ class UI(QtWidgets.QWidget):
             if self._history.position > 0:
                 self._history.position -= 1
                 self.points = self._history[self._history.position]
+                self.setWindowModified(self._history.modified)
 
     def redo(self):
         """Reapply a change reverted by undo()."""
@@ -327,6 +333,7 @@ class UI(QtWidgets.QWidget):
             if self._history.position < len(self._history) - 1:
                 self._history.position += 1
                 self.points = self._history[self._history.position]
+                self.setWindowModified(self._history.modified)
 
 
 SUFFIXES = [".stl", ".stl.gz", ".stl.bz2", ".stl.xz"]
@@ -337,7 +344,14 @@ class History(collections.deque):
     """A state history for undo/redo operations."""
     def __init__(self, state):
         self.position = 0
+        self.saved_position = 0
         super().__init__([state])
+
+    @property
+    def modified(self):
+        """True if the current state has been modified since it was last saved
+        (excluding if it was modified but reverted)."""
+        return self.position != self.saved_position
 
 
 def main(names, path=None, points=None):

@@ -590,6 +590,7 @@ def test_history(tmpdir):
     assert len(self._history) == 1
     assert self._history.position == 0
     assert np.isnan(self._history[0]).all()
+    assert not self.isWindowModified()
 
     files = [
         Path(shutil.copy(tomial_tooth_collection_api.model(name), tmpdir))
@@ -602,30 +603,47 @@ def test_history(tmpdir):
     assert len(self._history) == 1
     assert self._history.position == 0
     assert np.isnan(self._history[0]).all()
+    assert not self.isWindowModified()
 
     pyperclip.copy("1\t2\t3\n4\t5\t6")
     self.table.paste_button.click()
     assert len(self._history) == 2
     assert self._history.position == 1
     assert np.array_equal(self.points[:2], self._history[1][:2])
+    assert self.isWindowModified()
 
     self.undo()
     assert len(self._history) == 2
     assert np.isnan(self.points).all()
+    assert not self.isWindowModified()
     self.undo()
     assert len(self._history) == 2
     assert np.isnan(self.points).all()
+    assert not self.isWindowModified()
 
     self.clicker.spawn_marker((7, 8, 9))
     self.clicker.spawn_marker((10, 11, 12))
     assert len(self._history) == 3
+    assert self.isWindowModified()
+    self.table._save(tmpdir / "foo.csv")
+    assert not self.isWindowModified()
 
     self.undo()
     self.clicker.spawn_marker((10, 11, 12))
     assert len(self._history) == 3
+    assert self.isWindowModified()
 
     self.undo()
+    assert self.isWindowModified()
     self.redo()
     assert sorted(self.clicker.markers) == [0, 2]
     self.redo()
     assert sorted(self.clicker.markers) == [0, 2]
+    assert self.isWindowModified()
+
+    self.clicker.spawn_marker((13, 14, 15))
+    self.clicker.spawn_marker((16, 17, 18))
+    for i in range(10):
+        self.undo()
+    for i in range(10):
+        self.redo()

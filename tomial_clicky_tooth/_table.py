@@ -197,6 +197,9 @@ class LandmarkTable(QtWidgets.QWidget):
             return
         with open(path, "wb") as f:
             f.write(_csv_io.writes(np.array(self), names=self.names).encode())
+        history = self.parent()._history
+        history.saved_position = history.position
+        self.parent().setWindowModified(False)
 
     def default_csv_name(self):  # pragma: no cover
         return ""
