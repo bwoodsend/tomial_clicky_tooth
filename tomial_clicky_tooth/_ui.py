@@ -35,6 +35,19 @@ def show_clicker(show_name):
     return show
 
 
+class LazyMenuBar(QtWidgets.QMenuBar):
+    """A menu bar whose submenus can be accessed via menu_bar["Name"] and are
+    created automatically if they don't exist."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._menus = {}
+
+    def __getitem__(self, menu):
+        if menu not in self._menus:
+            self._menus[menu] = self.addMenu(menu)
+        return self._menus[menu]
+
+
 class UI(QtWidgets.QWidget):
     def __init__(self, landmark_names, path=None, points=None, parent=None):
         super().__init__(parent)
@@ -89,7 +102,9 @@ class UI(QtWidgets.QWidget):
         self.clicker.marker_changed.connect(self.marker_changed_by_clicker_cb)
         self.clicker.marker_changed.connect(self._log_state)
 
-        self.menu_bar = self.setup_menu_bar()
+        self.menu_bar = LazyMenuBar(self)
+        self.setup_menu_bar(self.menu_bar)
+        self.menu_bar.adjustSize()
 
         # optionally start with some landmarks already picked
         if points is not None:
@@ -103,40 +118,29 @@ class UI(QtWidgets.QWidget):
     showFullScreen = show_clicker("showFullScreen")
     showNormal = show_clicker("showNormal")
 
-    def setup_menu_bar(self):
-        menu_bar = QtWidgets.QMenuBar(self)
+    def setup_menu_bar(self, bar: LazyMenuBar):
+        bar["&File"].addAction(
+            QtWidgets.QAction("&Open", self, shortcut="Ctrl+O",
+                              triggered=self.open_model))
 
-        file_menu = menu_bar.addMenu("&File")
+        bar["&Edit"].addAction(
+            QtWidgets.QAction("Clear markers", self,
+                              triggered=self.table.clear_all))
+        bar["&Edit"].addSeparator()
+        bar["&Edit"].addAction(
+            QtWidgets.QAction("&Undo", self, triggered=self.undo,
+                              shortcut=QtGui.QKeySequence.Undo))
+        bar["&Edit"].addAction(
+            QtWidgets.QAction("&Redo", self, triggered=self.redo,
+                              shortcut=QtGui.QKeySequence("Shift+Ctrl+Z")))
+        QtWidgets.QAction("Redo", self, triggered=self.redo,
+                          shortcut=QtGui.QKeySequence("Ctrl+Y"))
 
-        open_action = QtWidgets.QAction("&Open", self)
-        open_action.setShortcut("Ctrl+O")
-        open_action.triggered.connect(self.open_model)
-        file_menu.addAction(open_action)
+        bar["&About"].addAction(
+            QtWidgets.QAction("Terms And Conditions", self,
+                              triggered=self.show_licenses))
 
-        edit_menu = menu_bar.addMenu("&Edit")
-
-        clear_markers_action = QtWidgets.QAction("Clear markers", self)
-        clear_markers_action.triggered.connect(self.table.clear_all)
-        edit_menu.addAction(clear_markers_action)
-
-        undo = QtWidgets.QAction("Undo", self, triggered=self.undo)
-        undo.setShortcut(QtGui.QKeySequence.Undo)
-        edit_menu.addAction(undo)
-
-        for sequence in ("Ctrl+Y", "Shift+Ctrl+Z"):
-            redo = QtWidgets.QAction("Redo", self, triggered=self.redo)
-            redo.setShortcut(QtGui.QKeySequence(sequence))
-            self.addAction(redo)
-        edit_menu.addAction(redo)
-
-        help_menu = menu_bar.addMenu("&About")
-        license_action = QtWidgets.QAction("Terms And Conditions", self)
-        license_action.triggered.connect(self.show_licenses)
-        help_menu.addAction(license_action)
-
-        menu_bar.adjustSize()
-
-        return menu_bar
+        return bar
 
     def open_model(self):
         filter = " ".join("*" + i for i in SUFFIXES)
