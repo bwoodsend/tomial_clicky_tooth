@@ -98,6 +98,15 @@ def select_rows(self, *row_numbers):
     model.select(selection, model.SelectCurrent)
 
 
+def action(menu, name):
+    """Find a button in a menu of the menu bar."""
+    available = [i.text().replace("&", "") for i in menu.actions()]
+    for (i, text) in enumerate(available):
+        if name.replace("&", "") == text:
+            return menu.actions()[i]
+    raise ValueError(f"Action named '{name}' not found in {available}")
+
+
 def test_clicking():
     """Test left and right clicking on the renderer."""
     self = UI(["a", "b", "c", "d"])
@@ -279,7 +288,7 @@ def test_paste():
 
     # Basic paste one point.
     pyperclip.copy("123\t456\t789")
-    self.table.paste_button.click()
+    action(self.menu_bar["&Edit"], "Paste").trigger()
     assert self.table[0] == (123, 456, 789)
     assert self.clicker.markers[0].point == (123, 456, 789)
 
@@ -295,7 +304,7 @@ def test_paste():
     for text in INVALID_CSVs:
         assert _csv_io.parse_points(text) is None
         pyperclip.copy(text)
-        self.table.paste_button.click()
+        self.table.paste()
         assert np.all(self.points == points)
 
     # Ensure that trailing newlines don't cause the next point to be overwritten
@@ -341,7 +350,7 @@ def test_copy():
     self.show()
     app.processEvents()
 
-    self.table.copy_button.click()
+    action(self.menu_bar["&Edit"], "Copy").trigger()
     assert pyperclip.paste() == "0.0\t0.0\t1.0"
 
     select_rows(self, 1, 2, 4)
@@ -349,7 +358,7 @@ def test_copy():
     assert pyperclip.paste() == "5.0\t0.0\t1.0\n10.0\t0.0\t1.0\n20.0\t0.0\t1.0"
 
     select_rows(self, 0, 2)
-    self.table.cut_button.click()
+    action(self.menu_bar["&Edit"], "Cut").trigger()
     assert pyperclip.paste() == "0.0\t0.0\t1.0\n10.0\t0.0\t1.0"
     assert sorted(self.clicker.markers) == [1, 3, 4]
 
@@ -606,7 +615,7 @@ def test_history(tmpdir):
     assert not self.isWindowModified()
 
     pyperclip.copy("1\t2\t3\n4\t5\t6")
-    self.table.paste_button.click()
+    action(self.menu_bar["&Edit"], "Paste").trigger()
     assert len(self._history) == 2
     assert self._history.position == 1
     assert np.array_equal(self.points[:2], self._history[1][:2])

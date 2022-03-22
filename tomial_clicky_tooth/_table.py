@@ -90,9 +90,6 @@ class LandmarkTable(QtWidgets.QWidget):
         buttons_layout = QtWidgets.QGridLayout()
         self.box.addLayout(buttons_layout)
 
-        self.cut_button = button(self.cut)
-        self.copy_button = button(self.copy)
-        self.paste_button = button(self.paste)
         self.delete_button = button(self.delete)
         self.clear_all_button = button(self.clear_all)
         self.save_button = button(self.save)
@@ -100,18 +97,28 @@ class LandmarkTable(QtWidgets.QWidget):
         for (i, _button) in enumerate([
                 self.delete_button,
                 self.clear_all_button,
-                self.cut_button,
-                self.copy_button,
-                self.paste_button,
                 self.save_button,
         ]):
             buttons_layout.addWidget(_button, *divmod(i, 2))
 
         self.delete_button.setShortcut(QtCore.Qt.Key_Delete \
             if platform.system() != "Darwin" else QtCore.Qt.Key_Backspace)
-        self.cut_button.setShortcut(QtGui.QKeySequence.StandardKey.Cut)
-        self.copy_button.setShortcut(QtGui.QKeySequence.StandardKey.Copy)
-        self.paste_button.setShortcut(QtGui.QKeySequence.StandardKey.Paste)
+
+    def setup_menu_bar(self, bar, window):
+        """Populate a menu bar with this widget's actions."""
+        bar["&File"].addAction(
+            QtWidgets.QAction("&Save", window, triggered=self.save,
+                              shortcut=QtGui.QKeySequence.StandardKey.Save))
+        bar["&Edit"].addSeparator()
+        bar["&Edit"].addAction(
+            QtWidgets.QAction("Cut", window, triggered=self.cut,
+                              shortcut=QtGui.QKeySequence.StandardKey.Cut))
+        bar["&Edit"].addAction(
+            QtWidgets.QAction("&Copy", window, triggered=self.copy,
+                              shortcut=QtGui.QKeySequence.StandardKey.Copy))
+        bar["&Edit"].addAction(
+            QtWidgets.QAction("&Paste", window, triggered=self.paste,
+                              shortcut=QtGui.QKeySequence.StandardKey.Paste))
 
     @property
     def shape(self):

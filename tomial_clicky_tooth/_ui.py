@@ -104,6 +104,7 @@ class UI(QtWidgets.QWidget):
 
         self.menu_bar = LazyMenuBar(self)
         self.setup_menu_bar(self.menu_bar)
+        self.table.setup_menu_bar(self.menu_bar, self)
         self.menu_bar.adjustSize()
 
         # optionally start with some landmarks already picked
@@ -133,8 +134,9 @@ class UI(QtWidgets.QWidget):
         bar["&Edit"].addAction(
             QtWidgets.QAction("&Redo", self, triggered=self.redo,
                               shortcut=QtGui.QKeySequence("Shift+Ctrl+Z")))
-        QtWidgets.QAction("Redo", self, triggered=self.redo,
-                          shortcut=QtGui.QKeySequence("Ctrl+Y"))
+        self.addAction(
+            QtWidgets.QAction("Redo", self, triggered=self.redo,
+                              shortcut=QtGui.QKeySequence("Ctrl+Y")))
 
         bar["&About"].addAction(
             QtWidgets.QAction("Terms And Conditions", self,
