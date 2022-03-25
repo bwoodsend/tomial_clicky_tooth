@@ -374,18 +374,18 @@ def test_save():
     def _test_write(name):
         csv_path = os.path.join(root, name)
         with select_file(csv_path):
-            self.table.save()
+            self.table.save_as()
         with open(csv_path) as f:
             assert_text_equivalent(f.read(),
                                    "Landmarks,X,Y,Z\nfoo,0,1,2\nbar,3,4,5\n")
 
     with tempfile.TemporaryDirectory() as root:
-        assert self.table.default_csv_name() == ""
+        assert self.table.default_csv_path() == ""
         _test_write("foo.csv")
         with select_file(tomial_tooth_collection_api.model("1L")):
             self.open_model()
         self.points = points
-        assert self.table.default_csv_name() == "1L.csv"
+        assert self.table.default_csv_path().name == "1L.csv"
         _test_write("1L.csv")
 
     self.close()
@@ -495,12 +495,18 @@ def test_custom_files_index(tmpdir):
             except ValueError:
                 return None, None
 
+        def csv_path(self):
+            return tmpdir / f"foo-{self.path.name}.csv"
+
     self = CustomFileList(Palmer.range(), files[0])
     self.show()
 
     assert self.path == files[0]
     assert self.model_name_indicator.text() == "1L"
     assert self.model_number_indicator.text() == "(1/2)"
+    assert self.table.default_csv_path() == tmpdir / "foo-1L.stl.gz.csv"
+    self.table.save()
+    assert self.table.default_csv_path().exists()
 
     self.switch_model(">")
     assert self.path == files[1]
@@ -532,7 +538,7 @@ def test_no_model_open():
     self.buttons[0].click()
 
     with select_file(None):
-        self.table.save()
+        self.table.save_as()
 
     self.points = [[1, 2, 3]]
     read, write = os.pipe()

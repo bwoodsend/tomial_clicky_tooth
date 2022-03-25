@@ -1,5 +1,6 @@
 from textwrap import wrap
 import platform
+from pathlib import Path
 
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
@@ -109,6 +110,9 @@ class LandmarkTable(QtWidgets.QWidget):
         bar["&File"].addAction(
             QtWidgets.QAction("&Save", window, triggered=self.save,
                               shortcut=QtGui.QKeySequence.StandardKey.Save))
+        bar["&File"].addAction(
+            QtWidgets.QAction("Save &As", window, triggered=self.save_as,
+                              shortcut=QtGui.QKeySequence.StandardKey.SaveAs))
         bar["&Edit"].addSeparator()
         bar["&Edit"].addAction(
             QtWidgets.QAction("Cut", window, triggered=self.cut,
@@ -195,9 +199,12 @@ class LandmarkTable(QtWidgets.QWidget):
         return np.array([(np.nan,) * 3 if i is None else i for i in self[:]])
 
     def save(self):
+        self._save(self.default_csv_path())
+
+    def save_as(self):
         options = dict(
             caption="Save points .csv file",
-            directory=str(self.default_csv_name()),
+            directory=Path(self.default_csv_path()).name,
             filter="Basic Spreadsheet (*.csv)",
         )
 
@@ -212,8 +219,9 @@ class LandmarkTable(QtWidgets.QWidget):
         history = self.parent()._history
         history.saved_position = history.position
         self.parent().setWindowModified(False)
+        self.save_button.setDisabled(True)
 
-    def default_csv_name(self):  # pragma: no cover
+    def default_csv_path(self):  # pragma: no cover
         return ""
 
     def cut(self):

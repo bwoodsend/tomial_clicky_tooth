@@ -63,7 +63,7 @@ class UI(QtWidgets.QWidget):
         self.table = LandmarkTable(landmark_names)
         self.h_box.addWidget(self.table)
         # table button actions
-        self.table.default_csv_name = self.csv_name
+        self.table.default_csv_path = self.csv_path
 
         ### clicker ###
         self.clicker_qwidget = ClickableFigure(key_generator=self.key_generator)
@@ -111,6 +111,7 @@ class UI(QtWidgets.QWidget):
         if points is not None:
             self.points = points
         self._history = History(self.points)
+        self._update_modified_state_indicators()
         self._open_model(path)
 
     show = show_clicker("show")
@@ -177,6 +178,7 @@ class UI(QtWidgets.QWidget):
 
         self._history = History(self.points)
         self.clicker.update()
+        self._update_modified_state_indicators()
 
     def table_selection_changed_cb(self):
         """Highlights the markers on the model that are selected in the table"""
@@ -197,9 +199,11 @@ class UI(QtWidgets.QWidget):
             self.table[new.key] = new.point
         self.table.increment_selection()
 
-    def csv_name(self):
+    def csv_path(self):
+        """Save path for the CSV file."""
         if self.clicker.path is not None:
-            return SUFFIX_RE.match(self.clicker.path.name)[1] + ".csv"
+            return self.clicker.path.with_name(
+                SUFFIX_RE.match(self.clicker.path.name)[1] + ".csv")
         return ""
 
     @property
@@ -323,7 +327,11 @@ class UI(QtWidgets.QWidget):
             if self._history.saved_position >= len(self._history):
                 self._history.saved_position = -1
             self._history.append(self.points)
-            self.setWindowModified(self._history.modified)
+            self._update_modified_state_indicators()
+
+    def _update_modified_state_indicators(self):
+        self.setWindowModified(self._history.modified)
+        self.table.save_button.setEnabled(self._history.modified)
 
     def undo(self):
         """Undo a change made via user interaction."""
@@ -331,7 +339,7 @@ class UI(QtWidgets.QWidget):
             if self._history.position > 0:
                 self._history.position -= 1
                 self.points = self._history[self._history.position]
-                self.setWindowModified(self._history.modified)
+                self._update_modified_state_indicators()
 
     def redo(self):
         """Reapply a change reverted by undo()."""
@@ -339,7 +347,7 @@ class UI(QtWidgets.QWidget):
             if self._history.position < len(self._history) - 1:
                 self._history.position += 1
                 self.points = self._history[self._history.position]
-                self.setWindowModified(self._history.modified)
+                self._update_modified_state_indicators()
 
 
 SUFFIXES = [".stl", ".stl.gz", ".stl.bz2", ".stl.xz"]
