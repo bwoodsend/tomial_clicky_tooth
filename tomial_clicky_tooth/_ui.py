@@ -66,12 +66,11 @@ class UI(QtWidgets.QWidget):
         self.table.default_csv_path = self.csv_path
 
         ### clicker ###
-        self.clicker_qwidget = ClickableFigure(key_generator=self.key_generator)
-        self.clicker = self.clicker_qwidget
+        self.clicker = ClickableFigure(key_generator=self.key_generator)
 
         self.right_vbox = QtWidgets.QVBoxLayout()
         self.h_box.addLayout(self.right_vbox)
-        self.right_vbox.addWidget(self.clicker_qwidget)
+        self.right_vbox.addWidget(self.clicker)
         self.setShortcutEnabled(QtCore.Qt.LeftButton)
 
         ### Next/previous model buttons ###
