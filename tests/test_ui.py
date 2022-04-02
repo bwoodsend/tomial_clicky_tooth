@@ -17,7 +17,8 @@ import tomial_tooth_collection_api
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv_io
 from tomial_clicky_tooth._ui import UI
-from tests import xvfb_size, select_file, CloseBlockingDialog
+from tests import xvfb_size, select_file, CloseBlockingDialog, \
+    ChooseMessageBoxButton
 from tests.test_csv import INVALID_CSVs, assert_text_equivalent
 
 pytestmark = pytest.mark.order(5)
@@ -662,3 +663,48 @@ def test_history(tmpdir):
         self.undo()
     for i in range(10):
         self.redo()
+
+
+def test_save_prompt(tmp_path):
+    """Test that the *would you like to save before moving on* prompt appears
+    when it's supposed to."""
+    files = [
+        Path(shutil.copy(tomial_tooth_collection_api.model(name), tmp_path))
+        for name in ["1L", "1U"]
+    ]
+
+    self = UI(Palmer.range(), files[0])
+    self.show()
+    app.processEvents()
+
+    self.clicker.spawn_marker((7, 8, 9))
+    assert self._history.modified
+    with ChooseMessageBoxButton("Cancel"):
+        self.switch_model(">")
+    assert self._history.modified
+    assert self.path == files[0]
+
+    with ChooseMessageBoxButton("Save"):
+        self.switch_model(">")
+    assert not self._history.modified
+    assert self.path == files[1]
+    assert (tmp_path / "1L.csv").exists()
+
+    self.clicker.spawn_marker((7, 8, 9))
+    with ChooseMessageBoxButton("Don't Save"):
+        self.switch_model(">")
+    assert not self._history.modified
+    assert self.path == files[0]
+    assert not (tmp_path / "1U.csv").exists()
+
+    self.clicker.spawn_marker((7, 8, 9))
+    with ChooseMessageBoxButton("Cancel"):
+        self.open_model()
+    assert self.path == files[0]
+    assert self._history.modified
+
+    with select_file(tmp_path / "foo.csv"):
+        with ChooseMessageBoxButton("Save As"):
+            self.switch_model(">")
+        assert (tmp_path / "foo.csv").exists()
+        assert self.path == files[1]

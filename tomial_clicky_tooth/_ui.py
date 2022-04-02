@@ -145,6 +145,8 @@ class UI(QtWidgets.QWidget):
         return bar
 
     def open_model(self):
+        if not self.ask_to_save_unsaved_changes():
+            return
         filter = " ".join("*" + i for i in SUFFIXES)
         options = dict(caption="Open an .STL file",
                        filter=f"3D Model file ({filter})")
@@ -154,6 +156,8 @@ class UI(QtWidgets.QWidget):
 
     def _open_model(self, path):
         if not path:
+            return
+        if not self.ask_to_save_unsaved_changes():
             return
         path = Path(path)
         self.clicker.close_model()
@@ -178,6 +182,42 @@ class UI(QtWidgets.QWidget):
         self._history = History(self.points)
         self.clicker.update()
         self._update_modified_state_indicators()
+
+    def ask_to_save_unsaved_changes(self):
+        """Prompt the user to save before doing something that will lose their
+        changes.
+
+        Returns:
+            True if it's safe to move on, False if the action should be aborted.
+
+        No prompt is shown if there are no changes to save.
+
+        """
+        if not self._history.modified:
+            return True
+        prompt = QtWidgets.QMessageBox(self)
+        prompt.setText("The landmarks have been modified.")
+        prompt.setInformativeText(
+            "Would you like to save your current changes before moving on?")
+        save = prompt.addButton(QtWidgets.QMessageBox.Save)
+        save_as = prompt.addButton("Save &As", QtWidgets.QMessageBox.ActionRole)
+        do_not_save = prompt.addButton("&Don't Save",
+                                       QtWidgets.QMessageBox.ActionRole)
+        prompt.addButton(QtWidgets.QMessageBox.Cancel)
+        prompt.setDefaultButton(QtWidgets.QMessageBox.Save)
+        prompt.exec()
+
+        if prompt.clickedButton() is save:
+            self.table.save()
+        elif prompt.clickedButton() is save_as:
+            self.table.save_as()
+            # The user may cancel a Save As in which case show the prompt again.
+            return self.ask_to_save_unsaved_changes()
+        elif prompt.clickedButton() is do_not_save:
+            pass
+        else:
+            return False
+        return True
 
     def table_selection_changed_cb(self):
         """Highlights the markers on the model that are selected in the table"""

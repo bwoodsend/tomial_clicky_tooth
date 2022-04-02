@@ -49,6 +49,7 @@ class CloseBlockingDialog(object):
         timer.timeout.connect(self._handle_dialogs)
         timer.start()
         self.closed = None
+        self.error = None
         return self
 
     def _handle_dialogs(self):
@@ -57,7 +58,11 @@ class CloseBlockingDialog(object):
                 if widget.isVisible():
                     self._timer.stop()
                     self.closed = widget
-                    self.handle_dialog(widget)
+                    try:
+                        self.handle_dialog(widget)
+                    except Exception as ex:
+                        widget.close()
+                        self.error = ex
 
     @staticmethod
     def handle_dialog(dialog: QtWidgets.QDialog):
@@ -70,6 +75,24 @@ class CloseBlockingDialog(object):
         assert self.closed is not None, "No dialog appeared."
         assert isinstance(self.closed, self.type), \
             repr(self.closed) + " is not a " + str(self.type)
+        if self.error:
+            raise self.error
+
+
+class ChooseMessageBoxButton(CloseBlockingDialog):
+    def __init__(self, button: str, type=QtWidgets.QMessageBox):
+        super().__init__(type)
+        self.button = button
+
+    def handle_dialog(self, widget: QtWidgets.QMessageBox):
+        buttons = {i.text().replace("&", ""): i for i in widget.buttons()}
+        try:
+            button = buttons[self.button]
+        except KeyError:
+            raise ValueError(
+                f"No button found with text '{self.button}'. Available buttons "
+                f"are {list(buttons)}.") from None
+        button.click()
 
 
 class MockFileDialog:
