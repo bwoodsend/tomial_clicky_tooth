@@ -166,8 +166,8 @@ class UI(QtWidgets.QWidget):
         except InvalidModelError:
             del self.points
         else:
-            csv_path = path.with_name(SUFFIX_RE.sub(r"\1.csv", path.name))
-            if csv_path.exists():
+            csv_path = self.csv_path()
+            if Path(csv_path).exists():
                 self.points = csv_path
             else:
                 del self.points
