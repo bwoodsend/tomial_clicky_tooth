@@ -85,7 +85,7 @@ class ClickableFigure(vpl.QtFigure2):
 
         """
         self.close_model()
-        self.path = Path(path)
+        self.path = path if isinstance(path, Path) else Path(path)
 
         # Read the model directly from file
         try:

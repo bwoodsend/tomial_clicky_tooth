@@ -159,7 +159,7 @@ class UI(QtWidgets.QWidget):
             return
         if not self.ask_to_save_unsaved_changes():
             return
-        path = Path(path)
+        path = Path(path) if not isinstance(path, Path) else path
         self.clicker.close_model()
         try:
             self.clicker.open_model(path)
