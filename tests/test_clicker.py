@@ -30,7 +30,7 @@ def test_file_orientation():
     vpl.scatter([0, -10, 0], radius=3, color="r", fig=self)
     self.mesh_plot.color = "b"
     app.processEvents()
-    r, g, b = _principle_color(self)
+    r, g, b, *a = _principle_color(self)
     assert r < g < b
 
     self.close()
