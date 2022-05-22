@@ -257,10 +257,10 @@ def test_table_layout(long_names, show):
     # If not using maximised/fullscreen mode, make the window tiny.
     if show == "show":
         self.resize(600, 400)
-    target_width = self.table.table.sizeHint().width()
 
     for i in range(3):
         app.processEvents()
+        target_width = self.table.table.sizeHint().width()
         if self.table.table.width() == target_width:
             break
     assert self.table.table.width() == target_width
