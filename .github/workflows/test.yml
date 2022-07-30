@@ -72,7 +72,7 @@ jobs:
         run: pytest --screenshot-on-fail
 
       # Test PyInstaller.
-      - run: pip install "pyinstaller @ git+https://github.com/pyinstaller/pyinstaller.git@v4"
+      - run: pip install pyinstaller
       - working-directory: tests/PyInstaller_
         run: pyinstaller frozen-pytest.spec
       - working-directory: tests/PyInstaller_
