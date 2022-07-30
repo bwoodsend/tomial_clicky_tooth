@@ -1,4 +1,5 @@
 from . import _qapp
+from ._landmark_templates import LandmarksTemplate, LandmarksContext
 from ._ui import UI, main
 
 

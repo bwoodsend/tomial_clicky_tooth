@@ -1,0 +1,13 @@
+name: MHB
+description: Modified Huddard Bodenham scoring system landmarks for assessing maxillary arch constriction caused by cleft lip/palate
+
+adult:
+  - Mid-point of the incisal edge of the (a)(s)(1,2)
+  - Tip of the (a)(s)3
+  - Buccal cusp tip of the (a)(s)(4,5)
+  - Saddle point on the groove between the mesial and mid buccal cusps of the (a)(s)6
+
+primary:
+  - Mid-point of the incisal edge of the (a)(s)(1,2)
+  - Tip of the (a)(s)3
+  - Saddle point on the groove between the mesial and mid buccal cusps of the (a)(s)(4,5)
