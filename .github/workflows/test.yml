@@ -32,10 +32,7 @@ jobs:
 
       - name: Install Qt dependencies
         if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt-get install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
-            libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
-            libxcb-xinerama0 libxcb-xfixes0
+        uses: tlambert03/setup-qt-libs@v1
 
       - name: Install OpenGL drivers
         if: startsWith(matrix.os, 'windows')
