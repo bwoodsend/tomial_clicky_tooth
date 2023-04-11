@@ -1,0 +1,5 @@
+name: Default
+description: Generic "one per tooth" set of landmarks
+
+any:
+  - (a)(s)(-)

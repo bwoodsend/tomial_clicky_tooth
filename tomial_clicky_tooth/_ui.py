@@ -9,8 +9,10 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv_io
+from tomial_clicky_tooth._landmark_templates import LandmarksTemplate
 from tomial_clicky_tooth._clicker import ClickableFigure, InvalidModelError
 from tomial_clicky_tooth._table import LandmarkTable
+from tomial_clicky_tooth._landmark_selector import LandmarksSelector
 
 
 class SwitchModelButton(QtWidgets.QPushButton):
@@ -49,7 +51,7 @@ class LazyMenuBar(QtWidgets.QMenuBar):
 
 
 class UI(QtWidgets.QWidget):
-    def __init__(self, landmark_names, path=None, points=None, parent=None):
+    def __init__(self, names=None, path=None, points=None, parent=None):
         super().__init__(parent)
 
         self.setWindowTitle(app.applicationName() + " [*]")
@@ -59,9 +61,20 @@ class UI(QtWidgets.QWidget):
 
         self._thread_lock = threading.Lock()
 
-        ### table ###
-        self.table = LandmarkTable(landmark_names)
-        self.h_box.addWidget(self.table)
+        ### template selector and table ###
+        box = QtWidgets.QVBoxLayout()
+        self.layout().addLayout(box)
+        if names is None or isinstance(names, LandmarksTemplate):
+            self.landmarks_selector = LandmarksSelector()
+            if names is not None:
+                self.landmarks_selector.template = names
+            box.addWidget(self.landmarks_selector)
+            self.table = LandmarkTable(self.landmarks_selector.landmarks)
+            self.landmarks_selector.changed.connect(self._names_changed_cb)
+        else:
+            self.table = LandmarkTable(names)
+            self.landmarks_selector = None
+        box.addWidget(self.table)
         # table button actions
         self.table.default_csv_path = self.csv_path
 
@@ -72,6 +85,7 @@ class UI(QtWidgets.QWidget):
         self.h_box.addLayout(self.right_vbox)
         self.right_vbox.addWidget(self.clicker)
         self.setShortcutEnabled(QtCore.Qt.LeftButton)
+        self.clicker.setFocus()
 
         ### Next/previous model buttons ###
         hbox = QtWidgets.QHBoxLayout()
@@ -109,7 +123,7 @@ class UI(QtWidgets.QWidget):
         # optionally start with some landmarks already picked
         if points is not None:
             self.points = points
-        self._history = History(self.points)
+        self._history = History(self._state)
         self._update_modified_state_indicators()
         self._open_model(path)
 
@@ -143,6 +157,13 @@ class UI(QtWidgets.QWidget):
                               triggered=self.show_licenses))
 
         return bar
+
+    @property
+    def _state(self):
+        if self.landmarks_selector is None:
+            return self.points, None
+        else:
+            return self.points, self.landmarks_selector.state
 
     def open_model(self):
         if not self.ask_to_save_unsaved_changes():
@@ -179,7 +200,7 @@ class UI(QtWidgets.QWidget):
         else:
             self.model_number_indicator.setText("")
 
-        self._history = History(self.points)
+        self._history = History(self._state)
         self.clicker.update()
         self._update_modified_state_indicators()
 
@@ -355,6 +376,10 @@ class UI(QtWidgets.QWidget):
         lamancha.pyqt5.TermsAndConditions.centerise(self._licenses)
         self._licenses.show()
 
+    def _names_changed_cb(self, names):
+        self.table.names = names
+        self._log_state()
+
     def _log_state(self, *_):
         """Record the current landmark positions for undo/redo."""
         with self._thread_lock:
@@ -365,7 +390,7 @@ class UI(QtWidgets.QWidget):
                 self._history.pop()
             if self._history.saved_position >= len(self._history):
                 self._history.saved_position = -1
-            self._history.append(self.points)
+            self._history.append(self._state)
             self._update_modified_state_indicators()
 
     def _update_modified_state_indicators(self):
@@ -377,7 +402,11 @@ class UI(QtWidgets.QWidget):
         with self._thread_lock:
             if self._history.position > 0:
                 self._history.position -= 1
-                self.points = self._history[self._history.position]
+                state = self._history[self._history.position]
+                if self.landmarks_selector is not None:
+                    self.landmarks_selector.state = state[1]
+                    self.table.names = self.landmarks_selector.landmarks
+                self.points = state[0]
                 self._update_modified_state_indicators()
 
     def redo(self):
@@ -385,7 +414,11 @@ class UI(QtWidgets.QWidget):
         with self._thread_lock:
             if self._history.position < len(self._history) - 1:
                 self._history.position += 1
-                self.points = self._history[self._history.position]
+                state = self._history[self._history.position]
+                if self.landmarks_selector is not None:
+                    self.landmarks_selector.state = state[1]
+                    self.table.names = self.landmarks_selector.landmarks
+                self.points = state[0]
                 self._update_modified_state_indicators()
 
 
@@ -407,7 +440,7 @@ class History(collections.deque):
         return self.position != self.saved_position
 
 
-def main(names, path=None, points=None):
+def main(names=None, path=None, points=None):
     self = UI(names, path, points)
     self.show()
     app.exec()

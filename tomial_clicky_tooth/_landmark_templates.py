@@ -106,16 +106,23 @@ def _expand_scope_modifiers(template, jaw_type=JawType(primary="*"), *path):
 class LandmarksTemplate:
     """A generator for dental feature names.
 
-    This object provides a declarative way of listing landmarks optionally
-    capable of exploiting symmetry - be that symmetry between the upper and
-    lower jaw, the left and right sides of an arch, adult/primary teeth,
-    identical features repeated across ranges of teeth, or any combination of
-    the above.
+    A declarative way of listing landmarks optionally capable of exploiting
+    symmetry - be that symmetry between the upper and lower jaw, the left and
+    right sides of an arch, adult/primary teeth, identical features repeated
+    across ranges of teeth, or any combination of the above.
 
     """
     def __init__(self, template):
         self.template = template
         self.rules = expand_scope_modifiers(template)
+
+    @property
+    def name(self):
+        try:
+            return self.template["name"]
+        except (TypeError, KeyError):
+            raise ParseError("A landmarks definition must have a top level "
+                             "'name' field.") from None
 
     @classmethod
     def from_file(cls, file):

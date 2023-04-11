@@ -18,7 +18,7 @@ from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv_io
 from tomial_clicky_tooth._ui import UI
 from tests import xvfb_size, select_file, CloseBlockingDialog, \
-    ChooseMessageBoxButton
+    ChooseMessageBoxButton, reset
 from tests.test_csv import INVALID_CSVs, assert_text_equivalent
 
 pytestmark = pytest.mark.order(5)
@@ -262,7 +262,8 @@ def test_table_layout(long_names, show):
         app.processEvents()
         target_width = self.table.table.sizeHint().width()
         if self.table.table.width() == target_width:
-            break
+            if not self.table.table.horizontalScrollBar().isVisible():
+                break
     assert self.table.table.width() == target_width
 
     assert not self.table.table.horizontalScrollBar().isVisible()
@@ -271,8 +272,7 @@ def test_table_layout(long_names, show):
     # The table should expand horizontally a bit when landmarks are added to fit
     # the coordinates.
     old_size = self.table.size()
-    for point in self.clicker.mesh.vectors[[1000, 20000], 0]:
-        self.clicker.spawn_marker(point)
+    self.clicker.spawn_marker([123432143214321432, 9876987698769876, 456765434])
     app.processEvents()
     assert self.table.width() > old_size.width()
     assert self.table.height() == old_size.height()
@@ -605,7 +605,7 @@ def test_history(tmpdir):
 
     assert len(self._history) == 1
     assert self._history.position == 0
-    assert np.isnan(self._history[0]).all()
+    assert np.isnan(self._history[0][0]).all()
     assert not self.isWindowModified()
 
     files = [
@@ -618,14 +618,14 @@ def test_history(tmpdir):
     assert self._history is not old_history
     assert len(self._history) == 1
     assert self._history.position == 0
-    assert np.isnan(self._history[0]).all()
+    assert np.isnan(self._history[0][0]).all()
     assert not self.isWindowModified()
 
     pyperclip.copy("1\t2\t3\n4\t5\t6")
     action(self.menu_bar["&Edit"], "Paste").trigger()
     assert len(self._history) == 2
     assert self._history.position == 1
-    assert np.array_equal(self.points[:2], self._history[1][:2])
+    assert np.array_equal(self.points[:2], self._history[1][0][:2])
     assert self.isWindowModified()
 
     self.undo()
@@ -708,3 +708,27 @@ def test_save_prompt(tmp_path):
             self.switch_model(">")
         assert (tmp_path / "foo.csv").exists()
         assert self.path == files[1]
+
+
+def test_names_change():
+    reset()
+    self = UI(None, tomial_tooth_collection_api.model("1L"))
+    self.show()
+
+    assert self.landmarks_selector is not None
+    assert self.landmarks_selector.arch_type == "L"
+    assert self.table.names == Palmer.range("LL8", "LR8")
+    self.points = geometry.zip(np.arange(16), 0, 0)
+    self._log_state()
+
+    self.landmarks_selector.template = "MHB"
+    self.landmarks_selector.template_selection.activated.emit(0)
+
+    assert len(self.points) == 12
+    assert len(self.table.names) == 12
+    assert self._history.modified
+    self.undo()
+    assert self.points[15].tolist() == [15, 0, 0]
+    self.redo()
+    assert len(self.points) == 12
+    assert self.points[11].tolist() == [11, 0, 0]

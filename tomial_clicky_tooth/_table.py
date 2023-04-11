@@ -52,7 +52,6 @@ class LandmarkTable(QtWidgets.QWidget):
     COLUMN_NUMBERS = {name: i for (i, name) in enumerate(COLUMNS)}
 
     def __init__(self, names, parent=None):
-        self.names = names
         super().__init__(parent)
 
         self.table = table = _QTable()
@@ -78,14 +77,16 @@ class LandmarkTable(QtWidgets.QWidget):
         table.setHorizontalHeaderLabels(self.COLUMNS)
         table.setSizeAdjustPolicy(table.AdjustToContents)
         table.setSelectionBehavior(table.SelectRows)
-        table.horizontalHeader().setMinimumSectionSize(50)
+        table.horizontalHeader().setMinimumSectionSize(65)
 
-        self.load_table_contents(names)
+        self._names = []
+        self.names = names
         self.table.setWordWrap(True)
         self.table.itemChanged.connect(self.table.adjustSize)
         self.table.itemSelectionChanged.connect(self.itemSelectionChanged.emit)
 
         self.increment_selection()
+        self.table.setFocus()
 
     def setup_buttons(self):
         buttons_layout = QtWidgets.QGridLayout()
@@ -128,20 +129,29 @@ class LandmarkTable(QtWidgets.QWidget):
     def shape(self):
         return self.table.rowCount(), self.table.columnCount()
 
-    def load_table_contents(self, names):
+    @property
+    def names(self):
+        return self._names
+
+    @names.setter
+    def names(self, names):
         self.table.setRowCount(len(names))
         flags = QtCore.Qt.ItemFlags(QtCore.Qt.ItemFlag.ItemIsSelectable +
                                     QtCore.Qt.ItemFlag.ItemIsEnabled)
         for (i, name) in enumerate(names):
             for j in range(1, len(self.COLUMNS)):
-                self.table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
+                if self.table.item(i, j) is None:
+                    self.table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
                 self.table.item(i, j).setFlags(flags)
 
-            cell = QtWidgets.QTableWidgetItem("\n".join(wrap(str(name), 40)))
+            if self.table.item(i, 0) is None:
+                self.table.setItem(i, 0, QtWidgets.QTableWidgetItem())
+            cell = self.table.item(i, 0)
+            cell.setText("\n".join(wrap(str(name), 40)))
             cell.setFlags(flags)
-            self.table.setItem(i, 0, cell)
 
         self.table.adjustSize()
+        self._names = names
 
     def clear_all(self):
         del self[:]
@@ -250,7 +260,8 @@ class LandmarkTable(QtWidgets.QWidget):
 if __name__ == "__main__":
     from pangolin import Palmer
 
-    self = LandmarkTable(Palmer.range())
+    self = LandmarkTable.__new__(LandmarkTable)
+    self.__init__(Palmer.range())
     self.show()
 
     for i in range(3, 7):

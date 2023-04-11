@@ -13,9 +13,10 @@ class Interact(QtCore.QThread):  # pragma: no cover
 
     def run(self):
         ptpython.embed(self.namespace)
+        self.namespace["self"].close()
 
 
-def debug(names, path=None, points=None):
+def debug(names=None, path=None, points=None):
     self = UI(names, path, points)
     self.show()
     t = Interact({**locals(), **globals()})
@@ -24,4 +25,4 @@ def debug(names, path=None, points=None):
 
 
 if __name__ == '__main__':
-    debug(Palmer.range(), *sys.argv[1:])
+    debug(None, *sys.argv[1:])

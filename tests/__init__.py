@@ -1,6 +1,7 @@
 import os
 from contextlib import contextmanager
 from functools import wraps
+import shutil
 
 import psutil
 from PyQt5 import QtCore, QtWidgets
@@ -140,3 +141,12 @@ def select_file(*paths):
     QtWidgets.QFileDialog = selector
     yield selector
     QtWidgets.QFileDialog = QFileDialog
+
+
+def reset():
+    """Remove history/persistent states."""
+    from tomial_clicky_tooth._landmark_selector import CACHE
+    try:
+        shutil.rmtree(CACHE)
+    except FileNotFoundError:
+        pass

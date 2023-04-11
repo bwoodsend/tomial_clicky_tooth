@@ -14,4 +14,4 @@ if __name__ == "__main__":
     else:
         csv_path = path = None
 
-    self = main(Palmer.range(), path, csv_path)
+    self = main(None, path, csv_path)
