@@ -10,7 +10,7 @@ datas, hidden = collect_entry_point("pytest11")
 # And all other test-only dependencies.
 hidden += [
     "tomial_tooth_collection_api",
-    "PyQt5.QtTest",
+    "PyQt6.QtTest",
     "mss",
     "psutil",
 ]

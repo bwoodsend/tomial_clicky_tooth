@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt5 import QtWidgets, QtGui
+from PyQt6 import QtWidgets, QtGui
 
 app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
 app.setApplicationName("Tomial Clicky Tooth")

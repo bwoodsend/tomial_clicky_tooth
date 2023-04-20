@@ -5,7 +5,7 @@ import threading
 from pathlib import Path
 
 import numpy as np
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt6 import QtWidgets, QtCore, QtGui
 
 from tomial_clicky_tooth._qapp import app
 from tomial_clicky_tooth import _csv_io
@@ -71,7 +71,7 @@ class UI(QtWidgets.QWidget):
         self.right_vbox = QtWidgets.QVBoxLayout()
         self.h_box.addLayout(self.right_vbox)
         self.right_vbox.addWidget(self.clicker)
-        self.setShortcutEnabled(QtCore.Qt.LeftButton)
+        # ~ self.setShortcutEnabled(QtCore.Qt.MouseButton.LeftButton)
 
         ### Next/previous model buttons ###
         hbox = QtWidgets.QHBoxLayout()
@@ -121,26 +121,26 @@ class UI(QtWidgets.QWidget):
 
     def setup_menu_bar(self, bar: LazyMenuBar):
         bar["&File"].addAction(
-            QtWidgets.QAction("&Open", self, shortcut="Ctrl+O",
-                              triggered=self.open_model))
+            QtGui.QAction("&Open", self, shortcut="Ctrl+O",
+                          triggered=self.open_model))
 
         bar["&Edit"].addAction(
-            QtWidgets.QAction("Clear markers", self,
-                              triggered=self.table.clear_all))
+            QtGui.QAction("Clear markers", self,
+                          triggered=self.table.clear_all))
         bar["&Edit"].addSeparator()
         bar["&Edit"].addAction(
-            QtWidgets.QAction("&Undo", self, triggered=self.undo,
-                              shortcut=QtGui.QKeySequence.Undo))
+            QtGui.QAction("&Undo", self, triggered=self.undo,
+                          shortcut=QtGui.QKeySequence.StandardKey.Undo))
         bar["&Edit"].addAction(
-            QtWidgets.QAction("&Redo", self, triggered=self.redo,
-                              shortcut=QtGui.QKeySequence("Shift+Ctrl+Z")))
+            QtGui.QAction("&Redo", self, triggered=self.redo,
+                          shortcut=QtGui.QKeySequence("Shift+Ctrl+Z")))
         self.addAction(
-            QtWidgets.QAction("Redo", self, triggered=self.redo,
-                              shortcut=QtGui.QKeySequence("Ctrl+Y")))
+            QtGui.QAction("Redo", self, triggered=self.redo,
+                          shortcut=QtGui.QKeySequence("Ctrl+Y")))
 
         bar["&About"].addAction(
-            QtWidgets.QAction("Terms And Conditions", self,
-                              triggered=self.show_licenses))
+            QtGui.QAction("Terms And Conditions", self,
+                          triggered=self.show_licenses))
 
         return bar
 
@@ -199,12 +199,13 @@ class UI(QtWidgets.QWidget):
         prompt.setText("The landmarks have been modified.")
         prompt.setInformativeText(
             "Would you like to save your current changes before moving on?")
-        save = prompt.addButton(QtWidgets.QMessageBox.Save)
-        save_as = prompt.addButton("Save &As", QtWidgets.QMessageBox.ActionRole)
-        do_not_save = prompt.addButton("&Don't Save",
-                                       QtWidgets.QMessageBox.ActionRole)
-        prompt.addButton(QtWidgets.QMessageBox.Cancel)
-        prompt.setDefaultButton(QtWidgets.QMessageBox.Save)
+        save = prompt.addButton(QtWidgets.QMessageBox.StandardButton.Save)
+        save_as = prompt.addButton("Save &As",
+                                   QtWidgets.QMessageBox.ButtonRole.ActionRole)
+        do_not_save = prompt.addButton(
+            "&Don't Save", QtWidgets.QMessageBox.ButtonRole.ActionRole)
+        prompt.addButton(QtWidgets.QMessageBox.StandardButton.Cancel)
+        prompt.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Save)
         prompt.exec()
 
         if prompt.clickedButton() is save:
@@ -317,11 +318,13 @@ class UI(QtWidgets.QWidget):
 
     def keyPressEvent(self, event):
         # No shift/ctrl/alt/etc keys pressed
-        if int(event.modifiers() & (~QtCore.Qt.KeypadModifier)) == 0:
-            if event.key() == QtCore.Qt.Key_Left:
+
+        if (event.modifiers() &
+            (~QtCore.Qt.KeyboardModifier.KeypadModifier)).value == 0:
+            if event.key() == QtCore.Qt.Key.Key_Left:
                 self.switch_model("<")
                 return
-            elif event.key() == QtCore.Qt.Key_Right:
+            elif event.key() == QtCore.Qt.Key.Key_Right:
                 self.switch_model(">")
                 return
         self.table.table.keyPressEvent(event)
@@ -333,7 +336,7 @@ class UI(QtWidgets.QWidget):
         """Open a licenses viewer window."""
 
         import pkg_resources
-        import lamancha.pyqt5
+        import lamancha.pyqt6
 
         components = {"python": lamancha.python}
         for distribution in pkg_resources.require("tomial_clicky_tooth"):
@@ -351,8 +354,8 @@ class UI(QtWidgets.QWidget):
             f"network of {len(components) - 1} other open source packages."
         ))  # yapf: disable
         self._licenses.layout().addWidget(
-            lamancha.pyqt5.TermsAndConditions(components.values()))
-        lamancha.pyqt5.TermsAndConditions.centerise(self._licenses)
+            lamancha.pyqt6.TermsAndConditions(components.values()))
+        lamancha.pyqt6.TermsAndConditions.centerise(self._licenses)
         self._licenses.show()
 
     def _log_state(self, *_):

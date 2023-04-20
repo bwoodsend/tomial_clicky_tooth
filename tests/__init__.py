@@ -3,8 +3,8 @@ from contextlib import contextmanager
 from functools import wraps
 
 import psutil
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
+from PyQt6 import QtCore, QtWidgets
+from PyQt6.QtWidgets import QFileDialog
 
 from tomial_clicky_tooth._qapp import app
 

@@ -112,8 +112,9 @@ ENV/
 .idea/*
 !.idea/fileTemplates
 
-# Junk from Apple
+# Junk
 .DS_Store
+.fuse_hidden*
 
 # Needed for .yapfignore and .dockerignore.
 .git

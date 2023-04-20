@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 import numpy as np
-from PyQt5 import QtTest, QtCore, QtGui
+from PyQt6 import QtTest, QtCore, QtGui
 import pyperclip
 from vtkmodules.vtkRenderingCore import vtkCoordinate
 from motmot import geometry
@@ -96,7 +96,7 @@ def select_rows(self, *row_numbers):
     index = model.model().index
     for i in row_numbers:
         selection.select(index(i, 0), index(i, self.table.shape[1] - 1))
-    model.select(selection, model.SelectCurrent)
+    model.select(selection, model.SelectionFlag.SelectCurrent)
 
 
 def action(menu, name):
@@ -392,15 +392,15 @@ def test_save():
     self.close()
 
 
-def key_press(widget, key, modifier=QtCore.Qt.NoModifier):
+def key_press(widget, key, modifier=QtCore.Qt.KeyboardModifier.NoModifier):
     """Send keyboard events."""
-    event = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, key, modifier)
+    event = QtGui.QKeyEvent(QtCore.QEvent.Type.KeyPress, key, modifier)
     app.sendEvent(widget, event)
 
 
 def test_model_switching():
     """Test iterating through a directory of models."""
-    from PyQt5.QtCore import Qt
+    from PyQt6.QtCore import Qt
 
     # Put several models and a points file in a single directory.
     with tempfile.TemporaryDirectory() as root:
@@ -421,26 +421,27 @@ def test_model_switching():
         self.buttons[0].click()
         assert self.clicker.path == files[0]
 
-        key_press(self, Qt.Key_Right)
+        key_press(self, Qt.Key.Key_Right)
         assert self.clicker.path != files[0]
-        key_press(self, Qt.Key_Left)
+        key_press(self, Qt.Key.Key_Left)
         assert self.clicker.path == files[0]
 
-        key_press(self, Qt.Key_Left, Qt.ShiftModifier)
+        key_press(self, Qt.Key.Key_Left, Qt.KeyboardModifier.ShiftModifier)
         assert self.clicker.path == files[0]
-        key_press(self.table.table, Qt.Key_Up)
+        key_press(self.table.table, Qt.Key.Key_Up)
         assert self.clicker.path == files[0]
-        key_press(self.table.table, Qt.Key_Left, Qt.ShiftModifier)
+        key_press(self.table.table, Qt.Key.Key_Left,
+                  Qt.KeyboardModifier.ShiftModifier)
         assert self.clicker.path == files[0]
 
         # It shouldn't matter which portion of the UI currently has focus.
-        key_press(self.clicker, Qt.Key_Right)
+        key_press(self.clicker, Qt.Key.Key_Right)
         assert self.clicker.path != files[0]
-        key_press(self.clicker.vtkWidget, Qt.Key_Left)
+        key_press(self.clicker.vtkWidget, Qt.Key.Key_Left)
         assert self.clicker.path == files[0]
-        key_press(self.table, Qt.Key_Right)
+        key_press(self.table, Qt.Key.Key_Right)
         assert self.clicker.path != files[0]
-        key_press(self.table.table, Qt.Key_Left)
+        key_press(self.table.table, Qt.Key.Key_Left)
         assert self.clicker.path == files[0]
 
         # Check the orientation is adjusting to each model.

@@ -22,6 +22,8 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 12
+    env:
+      FORCE_COLOR: 1
     steps:
       - uses: actions/checkout@v2
 
@@ -54,7 +56,7 @@ jobs:
           python -m pip install -U toml pip setuptools wheel
           pip install -e .[test]
 
-      # In order for PyQt5 and VTK to run without a screen, we need a fake
+      # In order for PyQt6 and VTK to run without a screen, we need a fake
       # screen.
       - name: setup virtual screen
         if: startsWith(matrix.os, 'ubuntu')
@@ -62,6 +64,10 @@ jobs:
           sudo apt-get install xvfb
           Xvfb ':42' -screen 0, 1280x720x24 & disown
           echo 'DISPLAY=:42' >> $GITHUB_ENV
+
+      - name: Installer pyperclip dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: sudo apt-get install -y xclip
 
       - name: Authenticate tomial_tooth_collection_api
         run: python -m tomial_tooth_collection_api --authenticate

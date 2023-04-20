@@ -3,7 +3,7 @@ import platform
 from pathlib import Path
 
 import numpy as np
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt6 import QtWidgets, QtGui, QtCore
 import pyperclip
 
 from tomial_clicky_tooth._qapp import app
@@ -12,8 +12,8 @@ from tomial_clicky_tooth import _misc, _csv_io
 
 class _QTable(QtWidgets.QTableWidget):
     def keyPressEvent(self, event):
-        if event.modifiers() == QtCore.Qt.NoModifier:
-            if event.key() in (QtCore.Qt.Key_Left, QtCore.Qt.Key_Right):
+        if event.modifiers() == QtCore.Qt.KeyboardModifier.NoModifier:
+            if event.key() in (QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Right):
                 event.ignore()
             else:
                 super().keyPressEvent(event)
@@ -64,8 +64,8 @@ class LandmarkTable(QtWidgets.QWidget):
 
         # The table should strictly obey its horizontal size hint but use as
         # much vertical space as is available.
-        policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                                       QtWidgets.QSizePolicy.Ignored)
+        policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed,
+                                       QtWidgets.QSizePolicy.Policy.Ignored)
         self.setSizePolicy(policy)
 
         self.font = QtGui.QFont()
@@ -76,8 +76,8 @@ class LandmarkTable(QtWidgets.QWidget):
 
         table.setColumnCount(len(self.COLUMNS))
         table.setHorizontalHeaderLabels(self.COLUMNS)
-        table.setSizeAdjustPolicy(table.AdjustToContents)
-        table.setSelectionBehavior(table.SelectRows)
+        table.setSizeAdjustPolicy(table.SizeAdjustPolicy.AdjustToContents)
+        table.setSelectionBehavior(table.SelectionBehavior.SelectRows)
         table.horizontalHeader().setMinimumSectionSize(50)
 
         self.load_table_contents(names)
@@ -102,27 +102,27 @@ class LandmarkTable(QtWidgets.QWidget):
         ]):
             buttons_layout.addWidget(_button, *divmod(i, 2))
 
-        self.delete_button.setShortcut(QtCore.Qt.Key_Delete \
-            if platform.system() != "Darwin" else QtCore.Qt.Key_Backspace)
+        self.delete_button.setShortcut(QtCore.Qt.Key.Key_Delete \
+            if platform.system() != "Darwin" else QtCore.Qt.Key.Key_Backspace)
 
     def setup_menu_bar(self, bar, window):
         """Populate a menu bar with this widget's actions."""
         bar["&File"].addAction(
-            QtWidgets.QAction("&Save", window, triggered=self.save,
-                              shortcut=QtGui.QKeySequence.StandardKey.Save))
+            QtGui.QAction("&Save", window, triggered=self.save,
+                          shortcut=QtGui.QKeySequence.StandardKey.Save))
         bar["&File"].addAction(
-            QtWidgets.QAction("Save &As", window, triggered=self.save_as,
-                              shortcut=QtGui.QKeySequence.StandardKey.SaveAs))
+            QtGui.QAction("Save &As", window, triggered=self.save_as,
+                          shortcut=QtGui.QKeySequence.StandardKey.SaveAs))
         bar["&Edit"].addSeparator()
         bar["&Edit"].addAction(
-            QtWidgets.QAction("Cut", window, triggered=self.cut,
-                              shortcut=QtGui.QKeySequence.StandardKey.Cut))
+            QtGui.QAction("Cut", window, triggered=self.cut,
+                          shortcut=QtGui.QKeySequence.StandardKey.Cut))
         bar["&Edit"].addAction(
-            QtWidgets.QAction("&Copy", window, triggered=self.copy,
-                              shortcut=QtGui.QKeySequence.StandardKey.Copy))
+            QtGui.QAction("&Copy", window, triggered=self.copy,
+                          shortcut=QtGui.QKeySequence.StandardKey.Copy))
         bar["&Edit"].addAction(
-            QtWidgets.QAction("&Paste", window, triggered=self.paste,
-                              shortcut=QtGui.QKeySequence.StandardKey.Paste))
+            QtGui.QAction("&Paste", window, triggered=self.paste,
+                          shortcut=QtGui.QKeySequence.StandardKey.Paste))
 
     @property
     def shape(self):
@@ -130,8 +130,7 @@ class LandmarkTable(QtWidgets.QWidget):
 
     def load_table_contents(self, names):
         self.table.setRowCount(len(names))
-        flags = QtCore.Qt.ItemFlags(QtCore.Qt.ItemFlag.ItemIsSelectable +
-                                    QtCore.Qt.ItemFlag.ItemIsEnabled)
+        flags = QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled
         for (i, name) in enumerate(names):
             for j in range(1, len(self.COLUMNS)):
                 self.table.setItem(i, j, QtWidgets.QTableWidgetItem(""))

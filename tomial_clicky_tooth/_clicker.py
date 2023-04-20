@@ -2,7 +2,7 @@ import itertools
 from pathlib import Path
 
 import numpy as np
-from PyQt5 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore
 import vtkplotlib as vpl
 from motmot import Mesh
 
@@ -44,8 +44,9 @@ class ClickableFigure(vpl.QtFigure2):
         self.add_preset_views()
         # The renderer should eat as much space as it can get.
         self.setSizePolicy(
-            QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
-                                  QtWidgets.QSizePolicy.MinimumExpanding))
+            QtWidgets.QSizePolicy(
+                QtWidgets.QSizePolicy.Policy.MinimumExpanding,
+                QtWidgets.QSizePolicy.Policy.MinimumExpanding))
 
         self.mesh_plot = None
         self.path = None
